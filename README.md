@@ -18,21 +18,29 @@ See the various Test scripts for example usage.
 
 -------------
 
-To reference FluentBash add the following lines to the top of your script.
+To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root directory as FluentBase.
 
-#load loader first
-[ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source $BASH_DIR/../core/core.sh #first thing we load is the script loader
+Load loader first
 
-To load up a specific library/functionality add a "loadScript" call.
-eg. 
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
-loadScript $BASH_DIR/../piping/lists.sh
-loadScript $BASH_DIR/../piping/conditionals.sh
-loadScript $BASH_DIR/../caching/sharedVars.sh
-loadScript $BASH_DIR/../caching/keyValueStoreCreate.sh
-loadScript $BASH_DIR/../caching/keyValueStore.sh
+	[ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+	source $BASH_DIR/../core/core.sh #first thing we load is the script loader
+
+To load up a specific library/functionality add a "loadScript" call.  eg. 
+	
+	loadScript $BASH_DIR/../piping/piping.sh
+	
+	loadScript $BASH_DIR/../piping/strings.sh
+	
+	loadScript $BASH_DIR/../piping/lists.sh
+	
+	loadScript $BASH_DIR/../piping/conditionals.sh
+	
+	loadScript $BASH_DIR/../caching/sharedVars.sh
+	
+	loadScript $BASH_DIR/../caching/keyValueStoreCreate.sh
+	
+	loadScript $BASH_DIR/../caching/keyValueStore.sh
 
 -------------
 Examples of the functionality expressed as bash tests.
