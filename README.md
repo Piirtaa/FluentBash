@@ -24,6 +24,7 @@ loadScript $BASH_DIR/../caching/keyValueStore.sh
 -------------
 Examples of the functionality expressed as bash tests.
 
+
 STRINGS  
 
 [ "$(echo "abc" | getStdIn)" == "abc" ]
@@ -65,6 +66,7 @@ STRINGS
 [ "$(echo "a" | appendLine b | appendLine c | insertLine 2 d | getLine 4 )" == "c" ]
 
 LIST=$(echo a | appendLine b | appendLine c | appendLine d | appendLine e | appendLine f);
+
 [ "$(echo "$LIST" | insertLine 1 x | getLine 1 )" == "x" ]
 
 [ "$(echo "$LIST" | getLinesAbove 1 | getLine 1 )" == "" ]
@@ -83,6 +85,8 @@ LIST=$(echo a | appendLine b | appendLine c | appendLine d | appendLine e | appe
 
 [ "$(echo "$LIST" | replaceLine 3 x | getLine 3 )" == "x" ]
 			
+
+
 LISTS
 
 [ "$(echo "a b c" | getArrayItem 0)" == "a" ]
@@ -114,6 +118,8 @@ LISTS
 [ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp | touch derp; cat derp  | getLine 1 ; rm derp )" == "A dog" ]
 
 [ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  | getLine 2 ; rm derp )" == "A cat" ]
+
+
 
 CONDITIONALS
 
@@ -149,20 +155,30 @@ CONDITIONALS
 
 [ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesLessThan 4 | getLine 1 =a)" == "a" ]
 
+
+
 PERSISTING VARIABLES
 	
 $(BOB="i'm bob";  shareVar dumpfile BOB;)
+
 doUpdate dumpfile		
+
 [ "$BOB" == "i'm bob" ]
 
 unset BOB	
+
 $(unshareVar dumpfile BOB;)
+
 doUpdate dumpfile		
+
 [ "$BOB" == "" ]
+
+
 
 IN-MEMORY (using tmpfs) KEY VALUE STORE
 
 setKV bob joe
+
 [ "$(getKV bob)" == "joe" ]
 
 
