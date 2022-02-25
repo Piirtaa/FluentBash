@@ -1,6 +1,14 @@
 # FluentBash
 bash scripting done fluently
 
+Features:
+-Key-Value store written entirely in Bash that allows data to be persisted across shell instances.
+-Variable store that allows variables to be easily shared between shells.
+-Fluent string and list mutation
+-Fluent tests/conditionals, facilitating inline tests as part of the construction of data
+-Much cleaner and more readable Bash scripting
+
+
 See the various Test scripts for example usage.
 
 -------------
