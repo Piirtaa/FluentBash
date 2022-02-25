@@ -18,7 +18,7 @@ See the various Test scripts for example usage.
 
 -------------
 
-To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root directory as FluentBase.
+To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root directory as FluentBash.
 
 Load loader first
 
