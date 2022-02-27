@@ -1,10 +1,15 @@
 #!/bin/bash
-#lib that provides some stdin functions
+#summary:  fluent list functions
+#tags: list
 
 #load loader first.  
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
-source $BASH_DIR/../piping/piping.sh #first thing we load is the script loader
+
+#load dependencies.  
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/conditionals.sh
 
 
 #retrieves an item from array by index.  where array is created by splitting stdin with supplied delimiter
@@ -128,6 +133,25 @@ doEach()
 readonly -f doEach
 #debugFlagOn doEach
 
+#reads stdin as lines and then performs a function ($2+) on each item (piped into the function)
+#usage:  echo $manylines | doEachLine echo 
+doEachLine()
+{
+	local STDIN=$(getStdIn) 
+
+	IFS=$'\n' read -d '' -r -a LIST <<< "$STDIN"
+	
+	for EACH in "${LIST[@]}"
+	do
+		debecho doEachLine each "$EACH"
+		echo "$EACH" | makeCall "$@"			
+	done
+
+	return 0
+}
+readonly -f doEachLine
+#debugFlagOn doEachLine
+
 #appends stdin to the provided file arg.  
 #while this is a trivial operation to do in shell with redirection, having a helper function is useful during
 #piped list iteration
@@ -144,3 +168,32 @@ appendToFile()
 }
 readonly -f appendToFile
 #debugFlagOn appendToFile
+
+#joins two lists together of the same length
+#usage:  echo mylist | joinLists myotherlistVarName joinString 
+joinLists()
+{
+	local STDIN=$(getStdIn)
+	local VARNAME="$1"
+	local LIST2=${!VARNAME}
+	local JOINER="$2"
+	
+	#ensure they are the same length
+	local LEN=$(echo "$STDIN" | getLineCount)
+	echo "$LIST2" | getLineCount | ifEquals "$LEN" > /dev/null || return 1
+	
+	#convert both lists to arrays
+	IFS=$'\n' read -d '' -r -a ARR1 <<< "$STDIN"
+	IFS=$'\n' read -d '' -r -a ARR2 <<< "$LIST2"
+	
+	#debecho joinLists arr1 "${ARR1[*]}"
+	
+	for ((i = 0 ; i < "$LEN" ; i++)); do
+		ITEM1="${ARR1[$i]}"
+		ITEM2="${ARR2[$i]}"
+  		echo "${ARR1[$i]}""$JOINER""${ARR2[$i]}"
+ 	done
+ 	return 0
+}
+readonly -f joinLists
+debugFlagOn joinLists

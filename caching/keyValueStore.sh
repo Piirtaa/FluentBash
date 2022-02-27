@@ -1,4 +1,7 @@
 #!/bin/bash
+#summary:  persistent key value store
+#tags: key value store, persistence, in memory data
+
 #usage:  
 #	keyValueStore.sh build #inits the store
 #	keyValueStore.sh #loads the existing store
@@ -8,13 +11,13 @@
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
-loadScript $BASH_DIR/../piping/lists.sh
-loadScript $BASH_DIR/../piping/conditionals.sh
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 #configuration of this subsystem
-loadScript $BASH_DIR/../caching/keyValueStoreConfig.sh
+loadScript caching/keyValueStoreConfig.sh
 
 #increments counter
 _updateCounter()

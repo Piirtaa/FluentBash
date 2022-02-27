@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #load loader first
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
+loadScript piping/piping.sh
 
 
 

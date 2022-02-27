@@ -1,5 +1,6 @@
 #!/bin/bash
-#lib that provides some stdin functions
+#summary:  fluent piping functions
+#tags: pipes
 
 #warning when chaining pipes together.  they are each kicked off in parallel but wait for input from the piping process.  
 
@@ -43,14 +44,53 @@ makeCall()
 {
 	local STDIN=$(getStdIn)
 	debecho makeCall stdin "$STDIN"
-	debecho makeCall cmd "$@"
+	local COMMAND="$@"
+	debecho makeCall command "$COMMAND"
 	
-	fn_exists "$1" || { debecho makeCall invalid function call "$@" ; return 1 ; }
-
-	RESULT=$(echo "$STDIN" | "$@" )	
-	debecho makeCall result "$RESULT"
-	echo "$RESULT"
-	return 0
+	#split into separate calls if has pipes		
+	if [[ "$COMMAND" == *"|"* ]]; then
+		debecho makeCall "$COMMAND" contains pipes.  splitting into separate commands
+		IFS="|" read -r -a LIST <<< "$COMMAND"
+		
+		local INPUT="$STDIN"
+		local RV		
+		for EACH in "${LIST[@]}"
+		do
+			debecho makeCall each "$EACH"
+			#recurse
+			#note we do not quote each.  since we have already split, chained calls into makeCall do not have quote protection
+			INPUT=$(echo "$INPUT" | makeCall $EACH ) 
+			RV=$?
+			debecho makeCall rv "$RV"
+			debecho makeCall result "$INPUT"
+			
+			if [[ "$RV" != 0 ]] ; then
+				return 1
+			fi
+		done
+		
+		echo "$INPUT"	
+		debecho makeCall compound result "$INPUT"	
+		return 0
+	else
+		local RESULT
+		local RV
+		local CALL="$1"
+		debecho makeCall call "$CALL"
+		fn_exists "$CALL" || { debecho makeCall invalid function call "$@" ; return 1 ; }
+	
+		RESULT=$(echo "$STDIN" | "$@" )	
+		RV=$?
+		debecho makeCall rv "$RV"
+		debecho makeCall result "$RESULT"
+	
+		if [[ "$RV" == 0 ]] ; then
+			echo "$RESULT"
+			return 0
+		else
+			return 1		
+		fi
+	fi
 }
 readonly -f makeCall
 #debugFlagOn makeCall
@@ -96,3 +136,11 @@ pipeTo()
 readonly -f pipeTo
 #debugFlagOn pipeTo
 
+runAsLastArg()
+{
+	local STDIN=$(getStdIn)
+	local COMMAND="$@"
+	echo "$($COMMAND $STDIN)"
+}
+readonly -f runAsLastArg
+#debugFlagOn runAsLastArg

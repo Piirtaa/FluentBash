@@ -1,14 +1,17 @@
 #!/bin/bash
+#summary:  fluent conditional functions
+#tags: conditionals
+
 #lib that provides some stdin functions
 
 #load loader first.  
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
-source $BASH_DIR/../piping/piping.sh #first thing we load is the script loader
-source $BASH_DIR/../piping/strings.sh #first thing we load is the script loader
-source $BASH_DIR/../piping/lists.sh #first thing we load is the script loader
-
+#load dependencies.  
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
 
 #echoes pipe to stdout if stdin contains $1
 #usage:  echo abc | ifContains b | ...will echo abc
@@ -70,13 +73,17 @@ readonly -f ifLengthOf
 ifStartsWith()
 {
 	local STDIN=$(getStdIn)
+	debecho ifStartsWith stdin "$STDIN"
 	if [[ -z "$STDIN" ]]; then
+		debecho ifStartsWith stdin is empty
 		return 1
 	else
 		if [[ "$STDIN" == "$1"* ]]; then
+			debecho ifStartsWith stdin contains "$1"
 			echo "$STDIN"
 			return 0
 		else
+			debecho ifStartsWith stdin does not contain "$1"
 			return 1
 		fi
 	fi	
@@ -171,3 +178,35 @@ ifNumberOfLinesLessThan()
 }
 readonly -f ifNumberOfLinesLessThan
 #debugFlagOn ifNumberOfLinesLessThan
+
+#description:  runs data thru a list of filters and echoes it back out if it passes all of them
+#usage:  echo $data | filter filterVarName
+filter()
+{
+	#grab stdin
+	local STDIN=$(getStdIn)
+	debecho filter stdin "$STDIN"
+	local VARNAME="$1"
+	local FILTER=${!VARNAME}
+	debecho filter filter "$FILTER"
+
+	local RV	
+	IFS=$'\n' read -d '' -r -a LIST <<< "$FILTER"
+	for EACH in "${LIST[@]}"
+	do
+		debecho filter each "$EACH"
+		echo "$STDIN" | makeCall "$EACH" 
+		RV=$?
+		if [[ "$RV" != 0 ]] ; then
+			debecho filter fails on "$EACH" 
+			return 1
+		fi
+	done
+
+	echo "$STDIN"
+	debecho filter succeeds output is "$STDIN"
+	return 0			
+}
+readonly -f filter
+#debugFlagOn filter
+

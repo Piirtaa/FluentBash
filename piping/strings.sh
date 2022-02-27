@@ -1,10 +1,15 @@
 #!/bin/bash
-#lib that provides some stdin functions
+#summary:  fluent string functions
+#tags: strings, string manipulation
 
 #load loader first.  
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
-source $BASH_DIR/../piping/piping.sh #first thing we load is the script loader
+
+#load dependencies.  
+loadScript piping/piping.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 
 #returns length of whatever was piped in
@@ -39,6 +44,28 @@ getSubstring()
 }
 readonly -f getSubstring
 #debugFlagOn getSubstring
+
+#usage: echo abcdef | getBefore cd
+getBefore()
+{
+	local STDIN=$(getStdIn)
+	local SEARCH="$1"
+	local MATCH="${STDIN%$SEARCH*}"
+	echo "$MATCH"
+}
+readonly -f getBefore
+#debugFlagOn getBefore
+
+#usage: echo abcdef | getAfter cd
+getAfter()
+{
+	local STDIN=$(getStdIn)
+	local SEARCH="$1"
+	local MATCH=${STDIN#*$SEARCH}
+	echo "$MATCH"
+}
+readonly -f getAfter
+#debugFlagOn getAfter
 
 getLineCount()
 {
@@ -246,4 +273,11 @@ appendOnLine()
 readonly -f appendOnLine
 #debugFlagOn appendOnLine
 
-
+#is a fluent cat
+#usage: echo fileName | dump
+dump()
+{
+	local STDIN=$(getStdIn)
+	cat "$STDIN"
+}
+readonly -f dump
