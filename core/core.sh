@@ -83,7 +83,7 @@
 	declare -gA LOADED_SCRIPTS;
 	
 	#mark the current script as loaded
-	LOADED_SCRIPTS["$BASH_DIR""/../core/core.sh"]=$(date +"%y%m%d%H%M%S")
+	LOADED_SCRIPTS["core/core.sh"]=$(date +"%y%m%d%H%M%S")
 	
 	#loads a script if it hasn't already been loaded
 	loadScript()
@@ -92,13 +92,12 @@
 			debecho loadScript loading "$1"
 			#load it		
 			LOADED_SCRIPTS["$1"]=$(date +"%y%m%d%H%M%S")
-			source "$1"
+			source "$BASH_DIR"'/../'"$1"
 			return 0
-		else
-			debecho loadScript already loaded "$1"
 		fi
 		
 		#already loaded
+		debecho loadScript already loaded "$1"
 		return 1
 	}
 	readonly -f loadScript

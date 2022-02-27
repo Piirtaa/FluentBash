@@ -1,14 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #load loader first
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
-loadScript $BASH_DIR/../piping/lists.sh
-loadScript $BASH_DIR/../piping/conditionals.sh
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 
 OK()      { echo -e "[\e[01;32m  OK  \e[0m]"; }
@@ -82,15 +82,21 @@ TESTCASE 'abc | ifArgsEqual a a=abc'
 	RESULT	
 
 TESTCASE 'a,b,c | getArrayItemsAsLines , | ifNumberOfLinesEquals 3 | getLine 1=a'
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesEquals 3 | getLine 1 =a)" == "a" ]
+	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesEquals 3 | getLine 1 )" == "a" ]
 	RESULT	
 
 TESTCASE 'a,b,c | getArrayItemsAsLines , | ifNumberOfLinesGreaterThan 2 | getLine 1=a'
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesGreaterThan 2 | getLine 1 =a)" == "a" ]
+	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesGreaterThan 2 | getLine 1 )" == "a" ]
 	RESULT	
 
 TESTCASE 'a,b,c | getArrayItemsAsLines , | ifNumberOfLinesLessThan 4 | getLine 1=a'
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesLessThan 4 | getLine 1 =a)" == "a" ]
+	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesLessThan 4 | getLine 1 )" == "a" ]
 	RESULT	
 
 
+#test a filter expression
+TESTCASE '$DATA | filter FILTER '
+	DATA=$( echo line1 | appendLine line2 | appendLine line3 | appendLine line13 )
+	FILTER=$( echo "getLine 1 | ifEndsWith 1" | appendLine "getLine 2 | ifStartsWith line" | appendLine "getLine 3 | ifContains 3" )  
+	[ "$(echo $DATA | filter FILTER )" ]
+	RESULT	

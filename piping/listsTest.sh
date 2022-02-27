@@ -1,14 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #load loader first
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
-loadScript $BASH_DIR/../piping/lists.sh
-loadScript $BASH_DIR/../piping/conditionals.sh
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 
 OK()      { echo -e "[\e[01;32m  OK  \e[0m]"; }
@@ -90,7 +90,11 @@ TESTCASE 'A dog,B cat,A cat,C cat |  doEach , ifContains A | appendToFile derp |
 	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  | getLine 2 ; rm derp )" == "A cat" ]
 	RESULT
 
+#echo "a,b,c,ad" | getArrayItemsAsLines , | doEachLine ifContains a | appendToFile derp | touch derp; cat derp | getLine 2 ; rm derp
 
+TESTCASE 'a,b,c,ad | getArrayItemsAsLines , | doEachLine ifContains a | appendToFile derp | touch derp; cat derp | getLine 2 ; rm derp = ad'
+	[ "$(echo "a,b,c,ad" | getArrayItemsAsLines , | doEachLine ifContains a | appendToFile derp | touch derp; cat derp | getLine 2 ; rm derp )" == "ad" ]
+	RESULT	
 
 
 	

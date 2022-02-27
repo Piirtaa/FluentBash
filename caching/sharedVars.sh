@@ -1,14 +1,16 @@
 #!/bin/bash
+#summary:  sharing vars across shells
+#tags: export, variables, caching
 
 #load loader first
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
-loadScript $BASH_DIR/../piping/lists.sh
-loadScript $BASH_DIR/../piping/conditionals.sh
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 
 #sources var file if the local timestamp is less (or null) than the file timestamp

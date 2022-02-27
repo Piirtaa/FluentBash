@@ -1,12 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #load loader first
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
-loadScript $BASH_DIR/../piping/piping.sh
-loadScript $BASH_DIR/../piping/strings.sh
+loadScript piping/piping.sh
+loadScript piping/strings.sh
 
 
 
@@ -137,9 +137,12 @@ TESTCASE 'LIST | removeLine 1  | getLine 1 = b'
 TESTCASE 'LIST | replaceLine 3 x | getLine 3 = x'
 	[ "$(echo "$LIST" | replaceLine 3 x | getLine 3 )" == "x" ]
 	RESULT
-			
 
+TESTCASE 'abcdef | getAfter c == def'
+	[ "$(echo "abcdef" | getAfter c)" == "def" ]
+	RESULT	
 
-
-
+TESTCASE 'abcdef | getBefore c == ab'
+	[ "$(echo "abcdef" | getBefore c)" == "ab" ]
+	RESULT	
 
