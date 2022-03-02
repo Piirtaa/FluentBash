@@ -26,16 +26,19 @@ echo ===================
 
 #create a test gram
 read -r -d '' GRAM <<'EOF'
-_KEY_a_0
-_KEY_b_2
+_KEY_0_a
+_KEY_2_b
 line1
 line2
-_KEY_c_1
+_KEY_1_c
 line b
-_KEY_d_3
+_KEY_3_d
 1
 2
 3
+_KEY_2_e
+1
+2
 EOF
 
 TESTCASE 'declare -A testHash; readKeyValueGram testHash <<< GRAM ; ${testHash[a]} == "" } '
@@ -56,6 +59,30 @@ TESTCASE 'declare -A testHash; readKeyValueGram testHash <<< GRAM ; echo "${test
 
 TESTCASE 'round trip'
 	[ "$(declare -A testHash; testHash[bob]="i am bob" ; GRAM=$(getKeyValueGram testHash) ; readKeyValueGram testHash2 <<< "$GRAM" ; echo "${testHash2[bob]}" )" == "i am bob" ]
+	RESULT	
+
+TESTCASE 'kvgGet'
+	[ "$(echo "$GRAM" | kvgGet d | getLine 3)" == "3" ]
+	RESULT	
+
+TESTCASE 'kvgGet'
+	[ "$(echo "$GRAM" | kvgGet b | getLine 1)" == "line1" ]
+	RESULT	
+	
+TESTCASE 'kvgGet'
+	[ "$(echo "$GRAM" | kvgGet a )" == "" ]
+	RESULT	
+
+TESTCASE 'kvgGet'
+	[ "$(echo "$GRAM" | kvgGet c )" == "line b" ]
+	RESULT	
+	
+TESTCASE 'round trip2'
+	[ "$(GRAM=$(kvgSet keyA valueA) ; echo "$GRAM" | kvgGet keyA )" == "valueA" ]
+	RESULT	
+
+TESTCASE 'round trip3'
+	[ "$(GRAM=$(kvgSet keyA valueA) ; GRAM=$(kvgSet keyA valueB) ; echo "$GRAM" | kvgGet keyA )" == "valueB" ]
 	RESULT	
 	
 #echo original gram "$GRAM"
