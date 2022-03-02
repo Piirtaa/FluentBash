@@ -28,19 +28,19 @@ Load loader first
 
 To load up a specific library/functionality add a "loadScript" call.  eg. 
 	
-	loadScript $BASH_DIR/../piping/piping.sh
+	loadScript piping/piping.sh
 	
-	loadScript $BASH_DIR/../piping/strings.sh
+	loadScript piping/strings.sh
 	
-	loadScript $BASH_DIR/../piping/lists.sh
+	loadScript piping/lists.sh
 	
-	loadScript $BASH_DIR/../piping/conditionals.sh
+	loadScript piping/conditionals.sh
 	
-	loadScript $BASH_DIR/../caching/sharedVars.sh
+	loadScript caching/sharedVars.sh
 	
-	loadScript $BASH_DIR/../caching/keyValueStoreCreate.sh
+	loadScript caching/keyValueStoreCreate.sh
 	
-	loadScript $BASH_DIR/../caching/keyValueStore.sh
+	loadScript caching/keyValueStore.sh
 
 -------------
 Examples of the functionality expressed as bash tests.
