@@ -7,6 +7,8 @@
 #if this script has been loaded already we stop
 [ -z "${IS_CORE_LOADED}" ] &&
 {
+	export LC_ALL=C #to speed stuff up by not using any unicode
+	
 	declare -r IS_CORE_LOADED=true
 
 	#set BASH_DIR.  this will clobber prior values.  all scripts are then loaded relative to the scriptloader

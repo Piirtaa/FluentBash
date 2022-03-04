@@ -45,13 +45,47 @@ getSubstring()
 readonly -f getSubstring
 #debugFlagOn getSubstring
 
+#usage: echo abcdef | getIndexOf cd
+getIndexOf()
+{
+	local STDIN SEARCH LEN POS STRING RV
+
+	STDIN=$(getStdIn)
+	SEARCH="$1"
+
+   LEN="${#STDIN}"
+       
+   # strip the first substring and everything beyond
+   STRING="${STDIN%%"$SEARCH"*}"
+	RV=$?
+	
+	if [[ "$RV" == 0 ]]; then
+	   # the position is calculated
+   	POS=${#STRING}
+ 		echo "$POS"
+ 		return 0	
+	fi
+	
+	return 1
+}
+
 #usage: echo abcdef | getBefore cd
 getBefore()
-{
-	local STDIN=$(getStdIn)
-	local SEARCH="$1"
-	local MATCH="${STDIN%$SEARCH*}"
-	echo "$MATCH"
+{	
+	local STDIN SEARCH POS RV
+	STDIN=$(getStdIn)
+	SEARCH="$1"
+	POS=$(echo "$STDIN" | getIndexOf "$SEARCH")
+	RV=$?
+	if [[ "$RV" == 0 ]]; then
+		echo "${STDIN:0:$POS}"
+		return 0	
+	fi
+	return 1
+	
+	#old way	
+	#local MATCH="${STDIN%$SEARCH*}"
+	#echo "$MATCH"
 }
 readonly -f getBefore
 #debugFlagOn getBefore
@@ -59,10 +93,23 @@ readonly -f getBefore
 #usage: echo abcdef | getAfter cd
 getAfter()
 {
-	local STDIN=$(getStdIn)
-	local SEARCH="$1"
-	local MATCH=${STDIN#*$SEARCH}
-	echo "$MATCH"
+	local STDIN SEARCH POS RV
+	STDIN=$(getStdIn)
+	SEARCH="$1"
+	POS=$(echo "$STDIN" | getIndexOf "$SEARCH")
+	RV=$?
+	if [[ "$RV" == 0 ]]; then
+		LEN="${#SEARCH}"
+		POS=$((POS + LEN))
+		echo "${STDIN:$POS}"
+		return 0	
+	fi
+	return 1
+	
+	#local STDIN=$(getStdIn)
+	#local SEARCH="$1"
+	#local MATCH=${STDIN#*$SEARCH}
+	#echo "$MATCH"
 }
 readonly -f getAfter
 #debugFlagOn getAfter

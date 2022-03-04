@@ -51,8 +51,9 @@ loadScript keyValue/keyValueGram.sh
 #		stop() { if canStop* -> stopStrategy;  if canDispose* -> disposeStrategy;  with state guards}
 #		watchTriggers {  polling job that looks for trigger conditions.  }
 #
-#	since we are modelling out an object paradigm we pipe our object state in via stdin, to functions that work on the instance, and return it.  so we are also fluent.
-	
+#	since we are modelling out an object paradigm we pipe our object state in via stdin, to functions that work on the instance, and return it, fluently.
+#  	
+#		
 
 declare -r workReservedKeys="state processes initStrategy startStrategy stopStrategy disposeStrategy" 
 declare -r workStartStates="pending initialized"
@@ -66,9 +67,10 @@ workCreate()
 {
 	local -A HASH
 	HASH[state]=pending
-	HASH[environment]="$(declare -f)"
+	#HASH[environment]="$(declare -f)"
 	local GRAM=$(getKeyValueGram HASH) ; 
 	echo "$GRAM"
+	return 0
 }	
 
 #description:  adds a variable to the gram
@@ -81,37 +83,88 @@ workSetVar()
 		return 1	
 	fi
 
-	local GRAM=$(getStdIn)
 	local KEY="_VAR_""$VARNAME"
-	local VAL="${!VARNAME}"
-	GRAM=$(kvgSet "$KEY" "$VAL")
+	local VAL
+	VAL="${!VARNAME}"
+	RV=$? #test for invalid indirection
+	if [[ "$RV" != 0 ]]; then
+		debecho workSetVar invalid indirection "$VARNAME"		
+		return 1		
+	fi	
+
+	local GRAM=$(getStdIn)
+	GRAM=$(echo "$GRAM" | kvgSet "$KEY" "$VAL")
+	RV=$?
+	if [[ "$RV" != 0 ]]; then
+		debecho workSetVar error kvgSet "$KEY" "$VAL"		
+		return 1		
+	fi	
 
 	#pipe it back out
 	echo "$GRAM"
 	return 0
 }
-readonly -f workSetVar
-#debugFlagon workSetVar
 
-#description:  loads a variable in current scope from the gram. and echoes value of it
-#usage: workGetVar varName <<< "$GRAM"
-workGetVar()
+readonly -f workSetVar
+#debugFlagOn workSetVar
+
+#description:  loads a variable in current scope from the gram. 
+#usage: workEmergeVar varName <<< "$GRAM"
+workEmergeVar()
 {
 	local VARNAME="$1"	
 	if [[ -z "$VARNAME" ]]; then
-		debecho workGetVar no var provided
+		debecho workEmergeVar no var provided
 		return 1	
 	fi
 
 	local GRAM=$(getStdIn)
 	local KEY="_VAR_""$VARNAME"
 	local VAL=$(echo "$GRAM" | kvgGet "$KEY") 
-	eval "$VARNAME"="$VAL"
-	echo "$VAL"
+	debecho workEmergeVar evaling "$VARNAME" "$VAL"
+	eval $VARNAME="'""$VAL""'"
 	return 0
 }
-readonly -f workGetVar
-#debugFlagon workGetVar
+readonly -f workEmergeVar
+debugFlagOn workEmergeVar
+
+#description:  loads all vars in current scope from the gram. 
+#usage: workEmergeAllVars <<< "$GRAM"
+workEmergeAllVars()
+{
+	local GRAM=$(getStdIn)
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_VAR_" | doEachLine getAfter "_VAR_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		workEmergeVar "$EACH" <<< "$GRAM"
+	done
+	return 0
+}
+readonly -f workEmergeAllVars
+#debugFlagOn workEmergeAllVars
+
+#description:  persists all vars in current scope back to the gram. 
+#usage: GRAM=$(echo "$GRAM" | workPersistAllVars)
+workPersistAllVars()
+{
+	local GRAM=$(getStdIn)
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_VAR_" | doEachLine getAfter "_VAR_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		GRAM=$(echo "$GRAM" | workSetVar "$EACH")
+	done
+	echo "$GRAM"
+	return 0
+}
+readonly -f workPersistAllVars
+#debugFlagOn workPersistAllVars
+
 
 #description:  adds a file to the gram
 #usage: echo $GRAM | workSetFile fileName
@@ -122,6 +175,7 @@ workSetFile()
 		debecho workSetFile no file provided
 		return 1	
 	fi
+	
 	if [[ ! -f "$FILENAME" ]]; then
 		debecho workSetFile "$FILENAME" does not exist
 		return 1  
@@ -137,27 +191,45 @@ workSetFile()
 	return 0
 }
 readonly -f workSetFile
-#debugFlagon workSetFile
+#debugFlagOn workSetFile
 
 #description:  writes a file from the gram
-#usage: workGetFile fileName <<< "$GRAM"
-#usage: echo "$GRAM" | workGetFile fileName
-workGetFile()
+#usage: workEmergeFile fileName <<< "$GRAM"
+#usage: echo "$GRAM" | workEmergeFile fileName
+workEmergeFile()
 {
 	local FILENAME="$1"	
 	if [[ -z "$FILENAME" ]]; then
-		debecho workGetVar no var provided
+		debecho workEmergeFile no file provided
 		return 1	
 	fi
 
 	local GRAM=$(getStdIn)
-	local KEY="_FILE_""$VARNAME"
+	local KEY="_FILE_""$FILENAME"
 	local VAL=$(echo "$GRAM" | kvgGet "$KEY") 
 	echo "$VAL" > "$FILENAME"	
 	return 0
 }
-readonly -f workGetFile
-#debugFlagon workGetFile
+readonly -f workEmergeFile
+#debugFlagOn workEmergeFile
+
+#description:  loads all vars in current scope from the gram. 
+#usage: workEmergeAllFiles <<< "$GRAM"
+workEmergeAllFiles()
+{
+	local GRAM=$(getStdIn)
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_FILE_" | doEachLine getAfter "_FILE_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		workEmergeFile "$EACH" <<< "$GRAM"
+	done
+	return 0
+}
+readonly -f workEmergeAllFiles
+#debugFlagOn workEmergeAllFiles
 
 #description:  add a function to the gram
 #usage:  echo $GRAM | workSetFunction fnName
@@ -176,9 +248,15 @@ workSetFunction()
 	fi
 	
 	local GRAM=$(getStdIn)
+	debecho workSetFunction gram "$GRAM"
+
 	local KEY="_FN_""$FNNAME"
+	debecho workSetFunction key "$KEY"
+
 	local VAL=$(declare -f "$FNNAME")	
-	GRAM=$(kvgSet "$KEY" "$VAL")
+	debecho workSetFunction val "$VAL"
+
+	GRAM=$(echo "$GRAM" | kvgSet "$KEY" "$VAL")
 
 	#pipe it back out
 	echo "$GRAM"
@@ -188,47 +266,59 @@ readonly -f workSetFunction
 #debugFlagOn workSetFunction
 
 #description:  creates/sets a function in current scope from the gram
-#usage: workGetFunction fnName <<< "$GRAM"
-workGetFunction()
+#usage: workEmergeFunction fnName <<< "$GRAM"
+workEmergeFunction()
 {
 	local FNNAME="$1"	
 	if [[ -z "$FNNAME" ]]; then
-		debecho workGetFunction no var provided
+		debecho workEmergeFunction no var provided
 		return 1	
 	fi
 	
 	local GRAM=$(getStdIn)
-	local KEY="_VAR_""$VARNAME"
+	local KEY="_FN_""$FNNAME"
 	local VAL=$(echo "$GRAM" | kvgGet "$KEY") 
 	eval "$VAL"
 	return 0
 }
-readonly -f workGetFunction
-#debugFlagon workGetFunction
+readonly -f workEmergeFunction
+#debugFlagOn workEmergeFunction
 
+#description:  loads all functions in current scope from the gram. 
+#usage: workEmergeAllFunctions <<< "$GRAM"
+workEmergeAllFunctions()
+{
+	local GRAM=$(getStdIn)
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_FN_" | doEachLine getAfter "_FN_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		workEmergeFunction "$EACH" <<< "$GRAM"
+	done
+	return 0
+}
+readonly -f workEmergeAllFunctions
+#debugFlagOn workEmergeAllFunctions
 
 #description:  add init function to the gram
 #usage:  echo $GRAM | workSetInitStrategy fnName
 workSetInitStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction init "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet init "$1"	
+	
 }
 readonly -f workSetInitStrategy
 #debugFlagOn workSetInitStrategy
 
-workGetInitStrategy()
-{
-	local GRAM=$(getStdIn)
-	echo "$GRAM" | workGetFunction init "$1"	
-
-}
 #description:  add start function to the gram
 #usage:  echo $GRAM | workSetStartStrategy fnName
 workSetStartStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction start "$1"	
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet start "$1"
 }
 readonly -f workSetStartStrategy
 #debugFlagOn workSetStartStrategy
@@ -238,7 +328,7 @@ readonly -f workSetStartStrategy
 workSetStopStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction stop "$1"	
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet stop "$1"
 }
 readonly -f workSetStopStrategy
 #debugFlagOn workSetStopStrategy
@@ -248,7 +338,7 @@ readonly -f workSetStopStrategy
 workSetDisposeStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction dispose "$1"	
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet dispose "$1"
 }
 readonly -f workSetDisposeStrategy
 #debugFlagOn workSetDisposeStrategy
@@ -258,7 +348,7 @@ readonly -f workSetDisposeStrategy
 workAddCanInitStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction canInit"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet canInit"$1" "$1"
 }
 readonly -f workAddCanInitStrategy
 #debugFlagOn workAddCanInitStrategy
@@ -268,7 +358,7 @@ readonly -f workAddCanInitStrategy
 workAddCanStartStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction canStart"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canStart"$1" "$1"	
 }
 readonly -f workAddCanStartStrategy
 #debugFlagOn workAddCanStartStrategy
@@ -278,7 +368,7 @@ readonly -f workAddCanStartStrategy
 workAddCanStopStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction canStop"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canStop"$1" "$1"	
 }
 readonly -f workAddCanStopStrategy
 #debugFlagOn workAddCanStopStrategy
@@ -288,10 +378,11 @@ readonly -f workAddCanStopStrategy
 workAddCanDisposeStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction canDispose"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canDispose"$1" "$1"	
 }
 readonly -f workAddCanDisposeStrategy
 #debugFlagOn workAddCanDisposeStrategy
+
 
 
 #boilerplate public functions ---------------------------
@@ -301,13 +392,12 @@ readonly -f workAddCanDisposeStrategy
 workStart()
 {
 	local GRAM=$(getStdIn)
-	#convert the gram into a hash
-	local -A HASH
-	readKeyValueGram HASH <<< "$GRAM"
-
-	#get state
-	STATE="${HASH[state]}"
+	debecho workStart gram "$GRAM"
 	
+	#get state
+	STATE=$(echo "$GRAM" | kvgGet state)
+	debecho workStart state "$STATE"
+			
 	#state transition guard check
 	local GUARDCHECK
 	GUARDCHECK=$(echo "$workStartStates" | doEach ifEquals "$STATE")
@@ -316,129 +406,127 @@ workStart()
 		return 1  
 	fi		
 
-	#reload the environment
-	ENVIRON="${HASH[environment]}"
+	#emerge the environment
+	ENVIRON=$(echo "$GRAM" | kvgGet environment)
 	eval "$ENVIRON" &>/dev/null	#hide any declaration errors
+
+	#emerge all functions and vars
+	debecho workStart emerging functions 
+	workEmergeAllFunctions <<< "$GRAM"
+	debecho workStart emerging vars
+	workEmergeAllVars <<< "$GRAM"
 	
+	#get all keys
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	debecho workStart keys "$KEYS"
+		
 	#canInit preconditions
-	if [[ "$STATE" == initialized ]]; then
+	if [[ "$STATE" == pending ]]; then
 		debecho workStart canInit begins
-		#get all "canInit" entries	
-		for EACH in "${!HASH[canInit*]}"; do
-			debecho workStart each "$EACH"
-			local VAL="${HASH[$EACH]}"
-			debecho workStart val "$VAL"
-			
-			if [[ ! -z "$VAL" ]]; then
-				continue
-			else
-				#eval the logic
-				GRAM=$(echo "$GRAM" | "$VAL")
-				RV=$?
-				if [[ "$RV" != 0 ]]; then
-					#kack
-					debecho workStart init precondition fail "$EACH"
-					return 1
-				fi
-			fi		
+		#get all "canInit" entries
+		local INITKEYS=$(echo "$KEYS" | doEachLine ifStartsWith "canInit" | doEachLine getAfter "canInit" )
+		debecho workStart canInitKeys "$INITKEYS"
+		IFS=$'\n' read -d '' -r -a LIST <<< "$INITKEYS"
+		for EACH in "${LIST[@]}"
+		do
+			#run the function
+			eval "$EACH"
+			RV=$?
+			if [[ "$RV" != 0 ]]; then
+				#kack
+				debecho workStart init precondition fail "$EACH"
+				return 1
+			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		done
 	fi
 	
 	#init strategy
 	if [[ "$STATE" == pending ]]; then
 		debecho workStart init begins
-		local VAL="${HASH[initStrategy]}"
+		local VAL=$(echo "$GRAM" | kvgGet "init") 
 		debecho workStart val "$VAL"
 			
 		if [[ ! -z "$VAL" ]]; then
-			continue
-		else
 			#eval the logic
-			GRAM=$(echo "$GRAM" | "$VAL")
+			eval "$VAL"
 			RV=$?
 			if [[ "$RV" != 0 ]]; then
 				#kack
 				debecho workStart init fail
 				return 1
 			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		fi
 
 		#reupdate HASH based on the output GRAM
-		readKeyValueGram HASH <<< "$GRAM"
-		HASH[state]=initialized
+		GRAM=$(echo "$GRAM" | kvgSet state initialized)
 		STATE=initialized		
-		GRAM=$(getKeyValueGram HASH)
 	fi
 
 	#canStart preconditions
 	if [[ "$STATE" == initialized ]]; then
 		debecho workStart canStart begins
-		#get all "canStart" entries	
-		for EACH in "${!HASH[canStart*]}"; do
-			debecho workStart each "$EACH"
-			local VAL="${HASH[$EACH]}"
-			debecho workStart val "$VAL"
-			
-			if [[ ! -z "$VAL" ]]; then
-				continue
-			else
-				#eval the logic
-				GRAM=$(echo "$GRAM" | "$VAL")
-				RV=$?
-				if [[ "$RV" != 0 ]]; then
-					#kack
-					debecho workStart start precondition fail "$EACH"
-					return 1
-				fi
-			fi		
+		#get all "canStart" entries
+		local STARTKEYS=$(echo "$KEYS" | doEachLine ifStartsWith "canStart" | doEachLine getAfter "canStart" )
+		debecho workStart canStartKeys "$STARTKEYS"
+		IFS=$'\n' read -d '' -r -a LIST <<< "$STARTKEYS"
+		for EACH in "${LIST[@]}"
+		do
+			#run the function
+			eval "$EACH"
+			RV=$?
+			if [[ "$RV" != 0 ]]; then
+				#kack
+				debecho workStart start precondition fail "$EACH"
+				return 1
+			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		done
 	fi
 	
 	#start strategy
 	if [[ "$STATE" == initialized ]]; then
 		debecho workStart start begins
-		local VAL="${HASH[startStrategy]}"
+		local VAL=$(echo "$GRAM" | kvgGet "start") 
 		debecho workStart val "$VAL"
 			
 		if [[ ! -z "$VAL" ]]; then
-			continue
-		else
 			#eval the logic
-			GRAM=$(echo "$GRAM" | "$VAL")
+			eval "$VAL"
 			RV=$?
-			
 			if [[ "$RV" != 0 ]]; then
 				#kack
 				debecho workStart start fail
 				return 1
 			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		fi
 
 		#reupdate HASH based on the output GRAM
-		readKeyValueGram HASH <<< "$GRAM"
-		HASH[state]=running
+		GRAM=$(echo "$GRAM" | kvgSet state running)
 		STATE=running		
-		GRAM=$(getKeyValueGram HASH)
 	fi
 
 	echo "$GRAM"
 	return 0	
 }
 readonly -f workStart
-#debugFlagOn workStart
+debugFlagOn workStart
 
 #description:  public stop method for a unit of work
 #usage: echo $GRAM | workStop
 workStop()
 {
 	local GRAM=$(getStdIn)
-	#convert the gram into a hash
-	local -A HASH
-	readKeyValueGram HASH <<< "$GRAM"
 
 	#get state
-	STATE="${HASH[state]}"
-	
+	STATE=$(echo "$GRAM" | kvgGet state)
+			
 	#state transition guard check
 	local GUARDCHECK
 	GUARDCHECK=$(echo "$workStopStates" | doEach ifEquals "$STATE")
@@ -447,123 +535,110 @@ workStop()
 		return 1  
 	fi		
 
-	#reload the environment
-	ENVIRON="${HASH[environment]}"
+	#emerge the environment
+	ENVIRON=$(echo "$GRAM" | kvgGet environment)
 	eval "$ENVIRON" &>/dev/null	#hide any declaration errors
+
+	#emerge all functions and vars
+	workEmergeAllFunctions <<< "$GRAM"
+	workEmergeAllVars <<< "$GRAM"
 	
+	#get all keys
+	local KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+		
 	#canStop preconditions
 	if [[ "$STATE" == running ]]; then
 		debecho workStop canStop begins
-		#get all "canInit" entries	
-		for EACH in "${!HASH[canStop*]}"; do
-			debecho workStop each "$EACH"
-			local VAL="${HASH[$EACH]}"
-			debecho workStop val "$VAL"
-			
-			if [[ ! -z "$VAL" ]]; then
-				continue
-			else
-				#eval the logic
-				GRAM=$(echo "$GRAM" | "$VAL")
-				RV=$?
-				if [[ "$RV" != 0 ]]; then
-					#kack
-					debecho workStop stopping precondition fail "$EACH"
-					return 1
-				fi
-			fi		
+		#get all "canStop" entries
+		local CANSTOPKEYS=$(echo "$KEYS" | doEachLine ifStartsWith "canStop" | doEachLine getAfter "canStop" )
+		debecho workStop canStopKeys "$CANSTOPKEYS"
+		IFS=$'\n' read -d '' -r -a LIST <<< "$CANSTOPKEYS"
+		for EACH in "${LIST[@]}"
+		do
+			#run the function
+			eval "$EACH"
+			RV=$?
+			if [[ "$RV" != 0 ]]; then
+				#kack
+				debecho workStop stop precondition fail "$EACH"
+				return 1
+			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		done
 	fi
 	
 	#stop strategy
 	if [[ "$STATE" == running ]]; then
 		debecho workStop stop begins
-		local VAL="${HASH[stopStrategy]}"
+		local VAL=$(echo "$GRAM" | kvgGet "stop") 
 		debecho workStop val "$VAL"
 			
 		if [[ ! -z "$VAL" ]]; then
-			continue
-		else
 			#eval the logic
-			GRAM=$(echo "$GRAM" | "$VAL")
+			eval "$VAL"
 			RV=$?
 			if [[ "$RV" != 0 ]]; then
 				#kack
 				debecho workStop stop fail
 				return 1
 			fi
+			#persist any variable changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
 		fi
+
 		#reupdate HASH based on the output GRAM
-		readKeyValueGram HASH <<< "$GRAM"
-		HASH[state]=stopped
+		GRAM=$(echo "$GRAM" | kvgSet state stopped)
 		STATE=stopped		
-		GRAM=$(getKeyValueGram HASH)
 	fi
 
 	#canDispose preconditions
-	if [[ "$STATE" == stopped ]]; then
-		debecho workStop canDispose begins
-		#get all "canDispose" entries	
-		for EACH in "${!HASH[canDispose*]}"; do
-			debecho workStop each "$EACH"
-			local VAL="${HASH[$EACH]}"
-			debecho workStop val "$VAL"
-			
-			if [[ ! -z "$VAL" ]]; then
-				continue
-			else
-				#eval the logic
-				GRAM=$(echo "$GRAM" | "$VAL")
-				RV=$?
-				if [[ "$RV" != 0 ]]; then
-					#kack
-					debecho workStop dispose precondition fail "$EACH"
-					return 1
-				fi
-			fi		
-		done
-	fi
-	
-	#dispose strategy
-	if [[ "$STATE" == stopped ]]; then
-		debecho workStop dispose begins
-		local VAL="${HASH[disposeStrategy]}"
-		debecho workStop val "$VAL"
-			
-		if [[ ! -z "$VAL" ]]; then
-			continue
-		else
-			#eval the logic
-			GRAM=$(echo "$GRAM" | "$VAL")
-			RV=$?
-			
-			if [[ "$RV" != 0 ]]; then
-				#kack
-				debecho workStop dispose fail
-				return 1
-			fi
+	debecho workStop canDispose begins
+	#get all "canDispose" entries
+	local CANDISPOSEKEYS=$(echo "$KEYS" |  doEachLine ifStartsWith "canDispose" | doEachLine getAfter "canDispose" )
+	debecho workStop canDisposeKeys "$CANDISPOSEKEYS"
+	IFS=$'\n' read -d '' -r -a LIST <<< "$CANDISPOSEKEYS"
+	for EACH in "${LIST[@]}"
+	do
+		#run the function
+		eval "$EACH"
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStop dispose precondition fail "$EACH"
+			return 1
 		fi
+		#persist any variable changes made in a strategy to the GRAM
+		GRAM=$(echo "$GRAM" | workPersistAllVars)
+	done
 
-		#reupdate HASH based on the output GRAM
-		readKeyValueGram HASH <<< "$GRAM"
-		HASH[state]=disposed
-		STATE=disposed		
-		GRAM=$(getKeyValueGram HASH)
+	debecho workStop dispose begins
+	local VAL=$(echo "$GRAM" | kvgGet "dispose") 
+	debecho workStop val "$VAL"
+		
+	if [[ ! -z "$VAL" ]]; then
+		#eval the logic
+		eval "$VAL"
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStop dispose fail
+			return 1
+		fi
+		#persist any variable changes made in a strategy to the GRAM
+		GRAM=$(echo "$GRAM" | workPersistAllVars)
 	fi
+
+	#reupdate HASH based on the output GRAM
+	GRAM=$(echo "$GRAM" | kvgSet state disposed)
+	STATE=disposed		
 
 	echo "$GRAM"
 	return 0	
+
 }
 readonly -f workStop
 #debugFlagOn workStop
 
-#tests
-UOW=$(workCreate)
-
-MYVAR1=a 
-MYVAR2=b 
-
-UOW=$(echo "$UOW" | workSetVar MYVAR1)
-UOW=$(echo "$UOW" | workSetVar MYVAR2)
 
 

@@ -51,22 +51,24 @@ readKeyValueGram()
   		#local tmp=$arrayname[@]
   		#local RETURNHASH=( "${!tmp}" )
 	
+	local LEN
 	LEN=$(echo "$STDIN" | getLineCount)
 	debecho readKeyValueGram len "$LEN"
-		
+	
+	local ARR	
 	IFS=$'\n' read -d '' -r -a ARR <<< "$STDIN"
 	#iterate over each line
 	for ((i = 0 ; i < "$LEN" ; i++)); do
-		LINE="${ARR[$i]}"
+		local LINE="${ARR[$i]}"
 		debecho readKeyValueGram line "$LINE"
 	
 		#keys have the form "_KEY_numberOfLines_key"
-		COUNT_KEY=$(echo "$LINE" | ifStartsWith "_KEY_" | getAfter "_KEY_" )
+		local COUNT_KEY=$(echo "$LINE" | ifStartsWith "_KEY_" | getAfter "_KEY_" )
 		debecho readKeyValueGram countkey "$COUNT_KEY"
 		
 		if [[ ! -z "$COUNT_KEY" ]]; then
-			COUNT=$(echo "$COUNT_KEY" | getBefore "_" )
-			KEY=$(echo "$COUNT_KEY" | getAfter "_" )
+			local COUNT=$(echo "$COUNT_KEY" | getBefore "_" )
+			local KEY=$(echo "$COUNT_KEY" | getAfter "_" )
 			debecho readKeyValueGram count "$COUNT"
 			debecho readKeyValueGram key "$KEY"
 			
@@ -76,7 +78,7 @@ readKeyValueGram()
 			else
 				#start reading value at next line
 				i=$((i + 1))
-				VAL="${ARR[$i]}"
+				local VAL="${ARR[$i]}"
 				COUNT=$((COUNT - 1))
 				for ((j=0; j < "$COUNT" ; j++)); do
 					i=$((i + 1))
@@ -114,21 +116,31 @@ kvgSet()
 	fi
 	local VAL="$2"
 	
+	debecho kvgSet key "$KEY"
+	debecho kvgSet val "$VAL"
+			
 	#convert the gram into a hash
 	local GRAM=$(getStdIn)
+	debecho kvgSet gram "$GRAM"
+		
 	local -A HASH
 	readKeyValueGram HASH <<< "$GRAM"
+	
+	
 	#write the kvp
 	HASH["$KEY"]="$VAL"
+	debecho kvgSet writing "$KEY" "$VAL"
+
 	#convert it back into a gram
 	GRAM=$(getKeyValueGram HASH) 
-
+	debecho kvgSet gram "$GRAM"
+	
 	#pipe it back out
 	echo "$GRAM"
 	return 0
 }
 readonly -f kvgSet
-#debugFlagon kvgSet
+#debugFlagOn kvgSet
 
 #description:  gets an entry in the gram
 #usage: echo $GRAM | kvgGet key
@@ -179,5 +191,20 @@ kvgGet()
 readonly -f kvgGet
 #debugFlagOn kvgGet
 
-
+#description:  gets all keys, each as separate lines
+#usage: echo $GRAM | kvgGetAllKeys 
+kvgGetAllKeys()
+{
+	#convert the gram into a hash
+	local GRAM=$(getStdIn)
+	local LINES
+	LINES=$(echo "$GRAM" | grep "^_KEY_")
+	LINES=$(echo "$LINES" | doEachLine getAfter "_KEY" | doEachLine getAfter "_" | doEachLine getAfter "_" )
+	RV=$?
+	debecho kvgGetAllKeys found lines "$LINES"	
+	echo "$LINES"
+	return "$RV"
+}
+readonly -f kvgGetAllKeys
+#debugFlagOn kvgGetAllKeys
 

@@ -82,8 +82,11 @@ TESTCASE 'round trip2'
 	RESULT	
 
 TESTCASE 'round trip3'
-	[ "$(GRAM=$(kvgSet keyA valueA) ; GRAM=$(kvgSet keyA valueB) ; echo "$GRAM" | kvgGet keyA )" == "valueB" ]
+	[ "$(GRAM=$(kvgSet keyA valueA) ; GRAM=$(echo "$GRAM" | kvgSet keyA valueB) ; echo "$GRAM" | kvgGet keyA )" == "valueB" ]
 	RESULT	
+
+
+#echo "$GRAM" | kvgGetAllKeys
 	
 #echo original gram "$GRAM"
 #echo reading

@@ -146,3 +146,35 @@ TESTCASE 'abcdef | getBefore c == ab'
 	[ "$(echo "abcdef" | getBefore c)" == "ab" ]
 	RESULT	
 
+TESTCASE 'abcABCdef | getBefore ABC == abc'
+	[ "$(echo "abcABCdef" | getBefore ABC)" == "abc" ]
+	RESULT	
+	
+TESTCASE 'abcABCdef | getAfter ABC == def'
+	[ "$(echo "abcABCdef" | getAfter ABC)" == "def" ]
+	RESULT	
+	
+TESTCASE 'abcABCdefABC | getBefore ABC == abc'
+	[ "$(echo "abcABCdefABC" | getBefore ABC)" == "abc" ]
+	RESULT	
+	
+TESTCASE 'abcABCdefABC | getAfter ABC == defABC'
+	[ "$(echo "abcABCdefABC" | getAfter ABC)" == "defABC" ]
+	RESULT	
+	
+TESTCASE 'abcABCdefABC | getBefore x == abcABCdefABC'
+	[ "$(echo "abcABCdefABC" | getBefore x)" == "abcABCdefABC" ]
+	RESULT	
+	
+TESTCASE 'abcABCdefABC | getAfter x == '
+	[ "$(echo "abcABCdefABC" | getAfter x)" == "" ]
+	RESULT		
+
+TESTCASE 'abcABCdefABC | getBefore abc == '
+	[ "$(echo "abcABCdefABC" | getBefore abc)" == "" ]
+	RESULT	
+	
+TESTCASE 'abcABCdefABC | getAfter abc == ABCdefABC'
+	[ "$(echo "abcABCdefABC" | getAfter abc)" == "ABCdefABC" ]
+	RESULT	
+	
