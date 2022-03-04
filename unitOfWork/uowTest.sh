@@ -150,6 +150,9 @@ disposeTest()
 	return 0
 }
 UOW=$(echo "$UOW" | workSetDisposeStrategy disposeTest)
+echo "$UOW" > uowTemplate.txt
+exit
+
 UOW=$(echo "$UOW" | workStart ) 
 UOW=$(echo "$UOW" | workStop ) 
 echo "$UOW"
