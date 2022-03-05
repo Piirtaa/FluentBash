@@ -165,3 +165,21 @@ exit
 #	[ "$(echo "abc" | ifContains b)" == "abc" ]
 #	RESULT	
 
+
+
+
+
+TESTCASE 'UOW | kvgGet init=init'
+	[ "$(echo "$UOW" | kvgGet init)" == "init" ]
+	RESULT	
+
+exit
+
+UOW=$(echo "$UOW" | workStart ) 
+UOW=$(echo "$UOW" | workStop ) 
+
+
+
+#TESTCASE 'abc | ifContains b=abc'
+#	[ "$(echo "abc" | ifContains b)" == "abc" ]
+#	RESULT	

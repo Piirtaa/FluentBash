@@ -43,7 +43,7 @@ loadScript keyValue/keyValueGram.sh
 #			executed when the state transition is attempted.
 #		event triggers 
 #			isStartTriggered - conditional logic. returns bool.  if true, start is attempted.  polled when state is:pending or initialized   
-#  		isStopTriggered - conditional logic.  returns bool.  if true, stop is attempted.	 polled when state is:running
+#  		workIsStopTriggered - conditional logic.  returns bool.  if true, stop is attempted.	 polled when state is:running
 #		environment - contains all of the function definitions in existence during the composition of the gram.  this includes the workflow functions described below.
 #		
 #	we have functions  to process the unit of work which are fixed in implementation and boilerplate the workflow.		
@@ -55,9 +55,7 @@ loadScript keyValue/keyValueGram.sh
 #  	
 #		
 
-declare -r workReservedKeys="state processes initStrategy startStrategy stopStrategy disposeStrategy" 
-declare -r workStartStates="pending initialized"
-declare -r workStopStates="initialized running"
+
 
 #UoWGRAM construction methods ----------------------
 
@@ -67,7 +65,7 @@ workCreate()
 {
 	local -A HASH
 	HASH[state]=pending
-	HASH[environment]="$(declare -f)"
+	#HASH[environment]="$(declare -f)"
 	local GRAM=$(getKeyValueGram HASH) ; 
 	echo "$GRAM"
 	return 0
@@ -236,6 +234,26 @@ workEmergeAllFiles()
 }
 readonly -f workEmergeAllFiles
 #debugFlagOn workEmergeAllFiles
+
+#description:  writes all files back to the gram
+#usage: GRAM=$(echo "$GRAM" | workPersistAllFiles) 
+workPersistAllFiles()
+{
+	local GRAM KEYS LIST EACH
+	GRAM=$(getStdIn)
+	KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_FILE_" | doEachLine getAfter "_FILE_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		GRAM=$(echo "$GRAM" | workSetFile "$EACH")
+	done
+	echo "$GRAM"
+	return 0
+}
+readonly -f workPersistAllFiles
+#debugFlagOn workPersistAllFiles
 
 #description:  removes all files registered with the gram
 #usage: workRemoveAllFiles <<< "$GRAM"
@@ -441,23 +459,24 @@ readonly -f workSetStopTriggerStrategy
 workStart()
 {
 	local GRAM=$(getStdIn)
-	debecho workStart gram "$GRAM"
+	#debecho workStart gram "$GRAM"
 	
 	#get state
 	local STATE=$(echo "$GRAM" | kvgGet state)
 	debecho workStart state "$STATE"
 			
 	#state transition guard check
-	local GUARDCHECK
-	GUARDCHECK=$(echo "$workStartStates" | doEach ifEquals "$STATE")
+	local GUARDCHECK=$(echo "pending initialized" | doEach " " ifEquals "$STATE")
+	debecho workStart guardcheck "$GUARDCHECK"
+	
 	if [[ "$STATE" != "$GUARDCHECK" ]]; then
 		debecho workStart cannot start from state "$STATE"
 		return 1  
 	fi		
 
 	#emerge the environment
-	local ENVIRON=$(echo "$GRAM" | kvgGet environment)
-	eval "$ENVIRON" &>/dev/null	#hide any declaration errors
+	#local ENVIRON=$(echo "$GRAM" | kvgGet environment)
+	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
 
 	#emerge all functions, vars and files
 	debecho workStart emerging functions 
@@ -489,8 +508,10 @@ workStart()
 				debecho workStart init precondition fail "$EACH"
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			
 		done
 	fi
 	
@@ -509,8 +530,9 @@ workStart()
 				debecho workStart init fail
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -535,8 +557,9 @@ workStart()
 				debecho workStart start precondition fail "$EACH"
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 		done
 	fi
 	
@@ -555,8 +578,9 @@ workStart()
 				debecho workStart start fail
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -568,7 +592,7 @@ workStart()
 	return 0	
 }
 readonly -f workStart
-debugFlagOn workStart
+#debugFlagOn workStart
 
 #description:  public stop method for a unit of work
 #usage: echo $GRAM | workStop
@@ -580,16 +604,15 @@ workStop()
 	local STATE=$(echo "$GRAM" | kvgGet state)
 			
 	#state transition guard check
-	local GUARDCHECK
-	GUARDCHECK=$(echo "$workStopStates" | doEach ifEquals "$STATE")
+	local GUARDCHECK=$(echo "initialized running stopped" | doEach " " ifEquals "$STATE")
 	if [[ "$STATE" != "$GUARDCHECK" ]]; then
 		debecho workStop cannot stop from state "$STATE"
 		return 1  
 	fi		
 
 	#emerge the environment
-	local ENVIRON=$(echo "$GRAM" | kvgGet environment)
-	eval "$ENVIRON" &>/dev/null	#hide any declaration errors
+	#local ENVIRON=$(echo "$GRAM" | kvgGet environment)
+	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
 
 	#emerge all functions, vars and files.  we do this in the stop call because we may be running this on a different session/machine than where it started
 	workEmergeAllFunctions <<< "$GRAM"
@@ -617,8 +640,9 @@ workStop()
 				debecho workStop stop precondition fail "$EACH"
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 		done
 	fi
 	
@@ -637,8 +661,9 @@ workStop()
 				debecho workStop stop fail
 				return 1
 			fi
-			#persist any variable changes made in a strategy to the GRAM
+			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -662,8 +687,9 @@ workStop()
 			debecho workStop dispose precondition fail "$EACH"
 			return 1
 		fi
-		#persist any variable changes made in a strategy to the GRAM
+		#persist any variable and file changes made in a strategy to the GRAM
 		GRAM=$(echo "$GRAM" | workPersistAllVars)
+		GRAM=$(echo "$GRAM" | workPersistAllFiles)
 	done
 
 	debecho workStop dispose begins
@@ -679,8 +705,9 @@ workStop()
 			debecho workStop dispose fail
 			return 1
 		fi
-		#persist any variable changes made in a strategy to the GRAM
+		#persist any variable and file changes made in a strategy to the GRAM
 		GRAM=$(echo "$GRAM" | workPersistAllVars)
+		GRAM=$(echo "$GRAM" | workPersistAllFiles)
 	fi
 
 	#remove any gram files. 
@@ -700,14 +727,14 @@ readonly -f workStop
 #boilerplate trigger functions ---------------------------
 
 #description:  tests the start trigger condition and runs the start if true
-#usage:  echo "$GRAM" | isStartTriggered
-isStartTriggered()
+#usage:  echo "$GRAM" | workIsStartTriggered
+workIsStartTriggered()
 {
 	local GRAM VAL RV
 	GRAM=$(getStdIn)
 
 	VAL=$(echo "$GRAM" | kvgGet "startTrigger") 
-	debecho isStartTriggered val "$VAL"
+	debecho workIsStartTriggered val "$VAL"
 		
 	if [[ ! -z "$VAL" ]]; then
 		#eval the logic
@@ -715,7 +742,7 @@ isStartTriggered()
 		RV=$?
 		if [[ "$RV" != 0 ]]; then
 			#kack
-			debecho isStartTriggered start is not triggered
+			debecho workIsStartTriggered start is not triggered
 			return 1
 		fi
 
@@ -726,18 +753,18 @@ isStartTriggered()
 	
 	return 1
 }
-readonly -f isStartTriggered
-#debugFlagOn isStartTriggered
+readonly -f workIsStartTriggered
+#debugFlagOn workIsStartTriggered
 
 #description:  tests the stop trigger condition and runs the stop if true
-#usage:  echo "$GRAM" | isStopTriggered
-isStopTriggered()
+#usage:  echo "$GRAM" | workIsStopTriggered
+workIsStopTriggered()
 {
 	local GRAM VAL RV
 	GRAM=$(getStdIn)
 
 	VAL=$(echo "$GRAM" | kvgGet "stopTrigger") 
-	debecho isStopTriggered val "$VAL"
+	debecho workIsStopTriggered val "$VAL"
 		
 	if [[ ! -z "$VAL" ]]; then
 		#eval the logic
@@ -745,7 +772,7 @@ isStopTriggered()
 		RV=$?
 		if [[ "$RV" != 0 ]]; then
 			#kack
-			debecho isStopTriggered stop is not triggered
+			debecho workIsStopTriggered stop is not triggered
 			return 1
 		fi
 
@@ -756,21 +783,21 @@ isStopTriggered()
 
 	return 1
 }
-readonly -f isStopTriggered
-#debugFlagOn isStopTriggered
+readonly -f workIsStopTriggered
+#debugFlagOn workIsStopTriggered
 
 #description:  does a polling watch for conditions on a job.  the gram must be stored in a file
-#usage:  watchJob gramFileName intervalSeconds (optional.  default 60)
-watchJob()
+#usage:  workWatch gramFileName intervalSeconds (optional.  default 60)
+workWatch()
 {
 	local FILENAME="$1"	
 	if [[ -z "$FILENAME" ]]; then
-		debecho watchJob no file provided
+		debecho workWatch no file provided
 		return 1	
 	fi
 	
 	if [[ ! -f "$FILENAME" ]]; then
-		debecho watchJob "$FILENAME" does not exist
+		debecho workWatch "$FILENAME" does not exist
 		return 1  
 	fi		
 	
@@ -789,15 +816,15 @@ watchJob()
 	
 		#state transition guard check
 		local STARTGUARDCHECK
-		STARTGUARDCHECK=$(echo "$workStartStates" | doEach ifEquals "$STATE")
+		STARTGUARDCHECK=$(echo "pending initialized" | doEach " " ifEquals "$STATE")
 		if [[ "$STATE" == "$GUARDCHECK" ]]; then
 			GRAM=$(echo "$GRAM" | isStartTriggered) 
 			echo "$GRAM" > "$FILENAME" 
 		else
 			local STOPGUARDCHECK
-			STOPGUARDCHECK=$(echo "$workStopStates" | doEach ifEquals "$STATE")
+			STOPGUARDCHECK=$(echo "initialized running stopped" | doEach " " ifEquals "$STATE")
 			if [[ "$STATE" == "$GUARDCHECK" ]]; then
-				GRAM=$(echo "$GRAM" | isStopTriggered) 
+				GRAM=$(echo "$GRAM" | workIsStopTriggered) 
 				echo "$GRAM" > "$FILENAME" 
 				
 				#if it is disposed we exit the loop
@@ -812,5 +839,5 @@ watchJob()
 	done
 
 }
-readonly -f watchJob
-#debugFlagOn watchJob
+readonly -f workWatch
+#debugFlagOn workWatch

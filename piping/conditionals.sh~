@@ -34,7 +34,7 @@ ifContains()
 readonly -f ifContains
 #debugFlagOn ifContains
 
-#echoes pipe to stdout if stdin contains each arg
+#echoes pipe to stdout if stdin contains each item in list $1
 #usage:  echo abc | ifContainsAll b a c | ...will echo abc
 ifContainsAll()
 {

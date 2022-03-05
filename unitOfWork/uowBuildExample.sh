@@ -1,4 +1,6 @@
 #!/bin/bash
+#summary: this scripts provides example code on how to build a "unit of work"
+#tags: example, sample
 
 #load loader first.  
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

@@ -107,7 +107,6 @@ readonly -f getFirstArrayItemRemainder
 doEach()
 {
 	local STDIN=$(getStdIn) 
-	debecho doEach stdin "$STDIN"
 	local DELIM=${1:-' '}
 	debecho doEach delim "$DELIM"
 			
