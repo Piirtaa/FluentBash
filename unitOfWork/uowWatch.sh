@@ -9,4 +9,4 @@ source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 #load dependencies.  
 loadScript unitOfWork/uow.sh
 
-watchJob "$1" "$2"
+watchJob "$1" "$2" &

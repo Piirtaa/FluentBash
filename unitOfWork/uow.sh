@@ -125,7 +125,7 @@ workEmergeVar()
 	return 0
 }
 readonly -f workEmergeVar
-debugFlagOn workEmergeVar
+#debugFlagOn workEmergeVar
 
 #description:  loads all vars in current scope from the gram. 
 #usage: workEmergeAllVars <<< "$GRAM"
@@ -158,14 +158,31 @@ workPersistAllVars()
 	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
 	for EACH in "${LIST[@]}"
 	do
+		debecho workPersistAllVars persisting var "$EACH" "${!EACH}"	
 		GRAM=$(echo "$GRAM" | workSetVar "$EACH")
 	done
 	echo "$GRAM"
 	return 0
 }
 readonly -f workPersistAllVars
-#debugFlagOn workPersistAllVars
+debugFlagOn workPersistAllVars
 
+workDumpAllVars()
+{
+	local GRAM KEYS LIST EACH
+	GRAM=$(getStdIn)
+	KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+	KEYS=$(echo "$KEYS" | doEachLine ifStartsWith "_VAR_" | doEachLine getAfter "_VAR_" )
+		
+	IFS=$'\n' read -d '' -r -a LIST <<< "$KEYS"
+	for EACH in "${LIST[@]}"
+	do
+		debecho workDumpAllVars persisting var "$EACH" "${!EACH}"	
+	done
+	return 0
+}
+readonly -f workDumpAllVars
+debugFlagOn workDumpAllVars
 
 #UoWGRAM file primitives ----------------------
 
@@ -432,7 +449,7 @@ workAddCanDisposeStrategy()
 readonly -f workAddCanDisposeStrategy
 #debugFlagOn workAddCanDisposeStrategy
 
-#description:  add canDispose function to the gram
+#description:  add start trigger to the gram
 #usage:  echo $GRAM | workSetStartTriggerStrategy fnName
 workSetStartTriggerStrategy()
 {
@@ -442,7 +459,7 @@ workSetStartTriggerStrategy()
 readonly -f workSetStartTriggerStrategy
 #debugFlagOn workSetStartTriggerStrategy
 
-#description:  add canDispose function to the gram
+#description:  add stop trigger to the gram
 #usage:  echo $GRAM | workSetStopTriggerStrategy fnName
 workSetStopTriggerStrategy()
 {
@@ -451,6 +468,17 @@ workSetStopTriggerStrategy()
 }
 readonly -f workSetStopTriggerStrategy
 #debugFlagOn workSetStopTriggerStrategy
+
+#description:  add polling strategy to the gram
+#usage:  echo $GRAM | workSetPollingStrategy fnName
+workSetPollingStrategy()
+{
+	local GRAM=$(getStdIn)
+	echo "$GRAM" | workSetFunction "$1" | kvgSet poll "$1"	
+}
+readonly -f workSetPollingStrategy
+#debugFlagOn workSetPollingStrategy
+
 
 #boilerplate public functions ---------------------------
 
@@ -477,15 +505,17 @@ workStart()
 	#emerge the environment
 	#local ENVIRON=$(echo "$GRAM" | kvgGet environment)
 	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
-
+		
 	#emerge all functions, vars and files
-	debecho workStart emerging functions 
-	workEmergeAllFunctions <<< "$GRAM"
 	debecho workStart emerging vars
 	workEmergeAllVars <<< "$GRAM"
+
+	debecho workStart emerging functions 
+	workEmergeAllFunctions <<< "$GRAM"
+
 	debecho workStart emerging files
-	workEmergeAllFiles <<< "$GRAM"
-	
+	workEmergeAllFiles <<< "$GRAM"	
+		
 	#get all keys
 	local KEYS LIST EACH RV VAL
 	KEYS=$(echo "$GRAM" | kvgGetAllKeys)
@@ -493,6 +523,7 @@ workStart()
 		
 	#canInit preconditions
 	if [[ "$STATE" == pending ]]; then
+
 		debecho workStart canInit begins
 		#get all "canInit" entries
 		local INITKEYS=$(echo "$KEYS" | doEachLine ifStartsWith "canInit" | doEachLine getAfter "canInit" )
@@ -511,7 +542,7 @@ workStart()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
-			
+			workEmergeAllVars <<< "$GRAM"				
 		done
 	fi
 	
@@ -533,6 +564,7 @@ workStart()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -560,6 +592,7 @@ workStart()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
 		done
 	fi
 	
@@ -581,6 +614,7 @@ workStart()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -614,10 +648,9 @@ workStop()
 	#local ENVIRON=$(echo "$GRAM" | kvgGet environment)
 	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
 
-	#emerge all functions, vars and files.  we do this in the stop call because we may be running this on a different session/machine than where it started
-	workEmergeAllFunctions <<< "$GRAM"
+	#emerge all functions, vars and files
+	debecho workStart emerging vars
 	workEmergeAllVars <<< "$GRAM"
-	workEmergeAllFiles <<< "$GRAM"
 
 	local KEYS LIST EACH RV VAL	
 	#get all keys
@@ -643,6 +676,7 @@ workStop()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
 		done
 	fi
 	
@@ -664,6 +698,7 @@ workStop()
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
 		fi
 
 		#reupdate HASH based on the output GRAM
@@ -690,6 +725,7 @@ workStop()
 		#persist any variable and file changes made in a strategy to the GRAM
 		GRAM=$(echo "$GRAM" | workPersistAllVars)
 		GRAM=$(echo "$GRAM" | workPersistAllFiles)
+		workEmergeAllVars <<< "$GRAM"
 	done
 
 	debecho workStop dispose begins
@@ -708,10 +744,10 @@ workStop()
 		#persist any variable and file changes made in a strategy to the GRAM
 		GRAM=$(echo "$GRAM" | workPersistAllVars)
 		GRAM=$(echo "$GRAM" | workPersistAllFiles)
+		workEmergeAllVars <<< "$GRAM"
 	fi
-
-	#remove any gram files. 
-	workRemoveAllFiles <<< "$GRAM"
+	
+	$(echo "$GRAM" | workRemoveAllFiles)
 
 	#reupdate HASH based on the output GRAM
 	GRAM=$(echo "$GRAM" | kvgSet state disposed)
@@ -722,11 +758,11 @@ workStop()
 
 }
 readonly -f workStop
-#debugFlagOn workStop
+debugFlagOn workStop
 
-#boilerplate trigger functions ---------------------------
+#boilerplate trigger and polling functions ---------------------------
 
-#description:  tests the start trigger condition and runs the start if true
+#description:  tests the start trigger condition 
 #usage:  echo "$GRAM" | workIsStartTriggered
 workIsStartTriggered()
 {
@@ -747,14 +783,14 @@ workIsStartTriggered()
 		fi
 
 		#start is triggered
-		GRAM=$(echo "$GRAM" | workStart)
-		echo "$GRAM"
+		debecho workIsStartTriggered start is triggered
+		return 0
 	fi
 	
 	return 1
 }
 readonly -f workIsStartTriggered
-#debugFlagOn workIsStartTriggered
+debugFlagOn workIsStartTriggered
 
 #description:  tests the stop trigger condition and runs the stop if true
 #usage:  echo "$GRAM" | workIsStopTriggered
@@ -777,14 +813,35 @@ workIsStopTriggered()
 		fi
 
 		#stop is triggered
-		GRAM=$(echo "$GRAM" | workStop)
-		echo "$GRAM"
+		debecho workIsStopTriggered stop is triggered
+		return 0
 	fi
 
 	return 1
 }
 readonly -f workIsStopTriggered
-#debugFlagOn workIsStopTriggered
+debugFlagOn workIsStopTriggered
+
+#description:  runs the polling strategy
+#usage:  echo "$GRAM" | workPoll
+workPoll()
+{
+	local GRAM VAL RV
+	GRAM=$(getStdIn)
+
+	VAL=$(echo "$GRAM" | kvgGet "poll") 
+	debecho workPoll val "$VAL"
+		
+	if [[ ! -z "$VAL" ]]; then
+		#eval the logic
+		debecho workPoll doing poll strategy
+		eval "$VAL"
+	fi
+
+	return 0
+}
+readonly -f workPoll
+debugFlagOn workPoll
 
 #description:  does a polling watch for conditions on a job.  the gram must be stored in a file
 #usage:  workWatch gramFileName intervalSeconds (optional.  default 60)
@@ -807,37 +864,64 @@ workWatch()
 	while true;
 	do
 		#load up the gram		
+		debecho workWatch loading uow file "$FILENAME"
+
 		local GRAM=$(cat "$FILENAME")
 		if [[ -z "$GRAM" ]] ; then
 			break		
 		fi
 		
 		local STATE=$(echo "$GRAM" | kvgGet state)
-	
+		debecho workWatch state "$STATE"
+		echo "$GRAM" | workDumpAllVars
+		
 		#state transition guard check
 		local STARTGUARDCHECK
 		STARTGUARDCHECK=$(echo "pending initialized" | doEach " " ifEquals "$STATE")
-		if [[ "$STATE" == "$GUARDCHECK" ]]; then
-			GRAM=$(echo "$GRAM" | isStartTriggered) 
-			echo "$GRAM" > "$FILENAME" 
+		if [[ "$STATE" == "$STARTGUARDCHECK" ]]; then
+			debecho workWatch evaluating start trigger
+			local RV			
+			$(echo "$GRAM" | workIsStartTriggered) 
+			RV=$?
+			if [[ "$RV" == 0 ]] ; then
+				debecho workWatch starting
+				GRAM=$(echo "$GRAM" | workStart)
+				
+				workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
+				debecho workWatch persisting uow file "$FILENAME"
+				echo "$GRAM" > "$FILENAME" 
+			fi
 		else
 			local STOPGUARDCHECK
 			STOPGUARDCHECK=$(echo "initialized running stopped" | doEach " " ifEquals "$STATE")
-			if [[ "$STATE" == "$GUARDCHECK" ]]; then
-				GRAM=$(echo "$GRAM" | workIsStopTriggered) 
-				echo "$GRAM" > "$FILENAME" 
+			if [[ "$STATE" == "$STOPGUARDCHECK" ]]; then
+				debecho workWatch evaluating stop trigger
+				local RV			
+				$(echo "$GRAM" | workIsStopTriggered) 
+				RV=$?
+				if [[ "$RV" == 0 ]] ; then
+					debecho workWatch stopping
+					GRAM=$(echo "$GRAM" | workStop)
+					workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
+
+					debecho workWatch persisting uow file "$FILENAME"
+					echo "$GRAM" > "$FILENAME" 
+				fi
 				
-				#if it is disposed we exit the loop
+				#if it is disposed (meaning stopping completed fully) we exit the loop
 				STATE=$(echo "$GRAM" | kvgGet state)
 				if [[ "$STATE" == disposed ]] ; then
 					break
 				fi
 			fi	
 		fi		
+
+		#do the polling job
+		echo "$GRAM" | workPoll 
 	
 	   sleep $INTERVAL;
 	done
 
 }
 readonly -f workWatch
-#debugFlagOn workWatch
+debugFlagOn workWatch
