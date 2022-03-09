@@ -20,8 +20,8 @@ loadScript piping/conditionals.sh
 	#summary:  a summary of the script 
 	#tags: a, b, c
 	#....
-	#usage:  appears in the lines directly above function definitions
 	#description:  appears in the lines directly above function definitions
+	#usage:  appears in the lines directly above function definitions
 	#myFunction
 
 #description:  finds all scripts (name ends in .sh,  has a shebang)

@@ -14,21 +14,24 @@ WORKFILE="hotspotuow.txt"
 start()
 {
 	#overwrite some of the hotspot vars
-	INTERFACE_WLAN="${2:-'wlan0'}"
-	SSID="${3:-'secretfbivan'}"
-	WPAPASS="${4:-'fancy12345'}"
-	HW_MODE="${5:-'g'}"
+	INTERFACE_WLAN="${2:-wlan1}"
+	SSID="${3:-secretfbivan}"
+	WPAPASS="${4:-fancy12345}"
+	HW_MODE="${5:-g}"
 	INTERFACE_NET="$5"
 
-	UOW=$(echo "$UOW" |  workSetVar INTERFACE_WLAN)
-	UOW=$(echo "$UOW" |  workSetVar INTERFACE_NET)
-	UOW=$(echo "$UOW" |  workSetVar SSID)
-	UOW=$(echo "$UOW" |  workSetVar WPAPASS)
-	UOW=$(echo "$UOW" |  workSetVar HW_MODE)
+	UOW=$(echo "$UOW" | workSetVar INTERFACE_WLAN )
+	UOW=$(echo "$UOW" | workSetVar INTERFACE_NET )
+	UOW=$(echo "$UOW" | workSetVar SSID )
+	UOW=$(echo "$UOW" | workSetVar WPAPASS )
+	UOW=$(echo "$UOW" | workSetVar HW_MODE )
 	
-	startTrigger() { return 0 }
-	UOW=$(echo "$UOW" | workSetStartTriggerStrategy startTrigger)
+	startTrigger() 
+	{ 
+		return 0 
+	}
 	
+	UOW=$(echo "$UOW" | workSetStartTriggerStrategy startTrigger )
 	#if we have any custom conditions to add we can do so here
 	#UOW=$(echo "$UOW" | workAddCanInitStrategy canInit1)
 	#UOW=$(echo "$UOW" | workAddCanStartStrategy canRun1 )
@@ -37,12 +40,14 @@ start()
 	#UOW=$(echo "$UOW" | workSetStopTriggerStrategy stopTrigger)
 
 	#save this uow to a file
-
 	echo "$UOW" > "$WORKFILE"
 
-	#start the job
-	workWatch "$WORKFILE" 60 
+	#setup the exit hook
+	trap stop EXIT
 
+	#start the job
+	UOW=$(echo "$UOW" | workStart ) 
+	#workWatch "$WORKFILE" 60 
 }
 
 stop()
@@ -52,11 +57,14 @@ stop()
 
 
 
+
 case "$1" in
 	start)
-			start "${@:2}";;
+			start "${@:2}"
+			;;
 	stop)
-			stop;;
+			stop
+			;;
 	*)
 			args=( "start" "stop" )
 			desc=( "eg. start wlan0 mySSID myPW g eth0" "eg. stop"  )
@@ -65,8 +73,10 @@ case "$1" in
 			do
 				printf "\t%-15s%-s\n" "${args[i]}" "${desc[i]}"
 			done
-			exit;;
+			exit
+			;;
 esac
+
 
 
 

@@ -165,7 +165,7 @@ workPersistAllVars()
 	return 0
 }
 readonly -f workPersistAllVars
-debugFlagOn workPersistAllVars
+#debugFlagOn workPersistAllVars
 
 workDumpAllVars()
 {
