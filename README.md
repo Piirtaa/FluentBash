@@ -10,6 +10,8 @@ Features:
 	Fluent string and list mutation
 
 	Fluent tests/conditionals, facilitating inline tests as part of the construction of data
+	
+	Reactive programming allowing triggers to be defined and chained together which are persistant across reboot.
 
 	Much cleaner and more readable Bash scripting
 
@@ -203,4 +205,31 @@ IN-MEMORY (using tmpfs) KEY VALUE STORE
 	[ "$(getKV bob)" == "joe" ]
 
 
+TRIGGERS
+	#load trigger library 
+	loadScript unitOfWork/trigger.sh
+	
+	#define a series of steps.  
+	#	each step has 3 parts:  before trigger fires logic; the trigger; after trigger fires logic.  
+	#	the trigger itself is polled.  each step is persisted as a file in a "unitOfWork" datagram which encapsulates its logic
+	#		so that it can be exported across machine boundary.
+	#	triggers can be chained together.  thus a chain of reactive logic can be created somewhat fluently.
+	touch testFile
 
+	#step 1
+	beforeStep1() { echo "before step1" >> testFile }
+	step1Trigger() { echo "step 1 triggered" >> testFile ; return 0 ; }
+	afterStep1() { echo "after step1" >> testFile }
+	createTrigger step1 step1Trigger beforeStep1 afterStep1
+
+	#step 2
+	beforeStep2() { echo "before step2" >> testFile }
+	step2Trigger() { echo "step 2 triggered" >> testFile ; return 0 ; }
+	afterStep2() { echo "after step2" >> testFile }
+	createTrigger step2 step2Trigger beforeStep2 afterStep2
+
+	#link step1 to step2
+	chainTriggers step1 step2
+
+	#fire it off, with polling at 5 second intervals
+	activateTrigger step1 5
