@@ -369,11 +369,11 @@ readonly -f workEmergeAllFunctions
 #UoWGRAM strategy builders ----------------------
 
 #description:  add init function to the gram
-#usage:  echo $GRAM | workSetInitStrategy fnName
+#usage:  echo $GRAM | workSetInitStrategy fnName arg1 arg2
 workSetInitStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet init "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet init "$@"	
 	
 }
 readonly -f workSetInitStrategy
@@ -384,7 +384,7 @@ readonly -f workSetInitStrategy
 workSetStartStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1"	| kvgSet start "$1"
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet start "$@"
 }
 readonly -f workSetStartStrategy
 #debugFlagOn workSetStartStrategy
@@ -394,7 +394,7 @@ readonly -f workSetStartStrategy
 workSetStopStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1"	| kvgSet stop "$1"
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet stop "$@"
 }
 readonly -f workSetStopStrategy
 #debugFlagOn workSetStopStrategy
@@ -404,7 +404,7 @@ readonly -f workSetStopStrategy
 workSetDisposeStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1"	| kvgSet dispose "$1"
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet dispose "$@"
 }
 readonly -f workSetDisposeStrategy
 #debugFlagOn workSetDisposeStrategy
@@ -414,7 +414,7 @@ readonly -f workSetDisposeStrategy
 workAddCanInitStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1"	| kvgSet canInit"$1" "$1"
+	echo "$GRAM" | workSetFunction "$1"	| kvgSet canInit"$1" "$@"
 }
 readonly -f workAddCanInitStrategy
 #debugFlagOn workAddCanInitStrategy
@@ -424,7 +424,7 @@ readonly -f workAddCanInitStrategy
 workAddCanStartStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet canStart"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canStart"$1" "$@"	
 }
 readonly -f workAddCanStartStrategy
 #debugFlagOn workAddCanStartStrategy
@@ -434,7 +434,7 @@ readonly -f workAddCanStartStrategy
 workAddCanStopStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet canStop"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canStop"$1" "$@"	
 }
 readonly -f workAddCanStopStrategy
 #debugFlagOn workAddCanStopStrategy
@@ -444,7 +444,7 @@ readonly -f workAddCanStopStrategy
 workAddCanDisposeStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet canDispose"$1" "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet canDispose"$1" "$@"	
 }
 readonly -f workAddCanDisposeStrategy
 #debugFlagOn workAddCanDisposeStrategy
@@ -454,7 +454,7 @@ readonly -f workAddCanDisposeStrategy
 workSetStartTriggerStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet startTrigger "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet startTrigger "$@"	
 }
 readonly -f workSetStartTriggerStrategy
 #debugFlagOn workSetStartTriggerStrategy
@@ -464,7 +464,7 @@ readonly -f workSetStartTriggerStrategy
 workSetStopTriggerStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet stopTrigger "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet stopTrigger "$@"	
 }
 readonly -f workSetStopTriggerStrategy
 #debugFlagOn workSetStopTriggerStrategy
@@ -474,7 +474,7 @@ readonly -f workSetStopTriggerStrategy
 workSetPollingStrategy()
 {
 	local GRAM=$(getStdIn)
-	echo "$GRAM" | workSetFunction "$1" | kvgSet poll "$1"	
+	echo "$GRAM" | workSetFunction "$1" | kvgSet poll "$@"	
 }
 readonly -f workSetPollingStrategy
 #debugFlagOn workSetPollingStrategy
@@ -531,12 +531,13 @@ workStart()
 		IFS=$'\n' read -d '' -r -a LIST <<< "$INITKEYS"
 		for EACH in "${LIST[@]}"
 		do
+			VAL=$(echo "$GRAM" | kvgGet "$EACH") 
 			#run the function
-			eval "$EACH"
+			eval "$VAL"
 			RV=$?
 			if [[ "$RV" != 0 ]]; then
 				#kack
-				debecho workStart init precondition fail "$EACH"
+				debecho workStart init precondition fail "$VAL"
 				return 1
 			fi
 			#persist any variable and file changes made in a strategy to the GRAM
@@ -581,12 +582,13 @@ workStart()
 		IFS=$'\n' read -d '' -r -a LIST <<< "$STARTKEYS"
 		for EACH in "${LIST[@]}"
 		do
+			VAL=$(echo "$GRAM" | kvgGet "$EACH") 
 			#run the function
-			eval "$EACH"
+			eval "$VAL"
 			RV=$?
 			if [[ "$RV" != 0 ]]; then
 				#kack
-				debecho workStart start precondition fail "$EACH"
+				debecho workStart start precondition fail "$VAL"
 				return 1
 			fi
 			#persist any variable and file changes made in a strategy to the GRAM
@@ -665,12 +667,13 @@ workStop()
 		IFS=$'\n' read -d '' -r -a LIST <<< "$CANSTOPKEYS"
 		for EACH in "${LIST[@]}"
 		do
+			VAL=$(echo "$GRAM" | kvgGet "$EACH") 
 			#run the function
-			eval "$EACH"
+			eval "$VAL"
 			RV=$?
 			if [[ "$RV" != 0 ]]; then
 				#kack
-				debecho workStop stop precondition fail "$EACH"
+				debecho workStop stop precondition fail "$VAL"
 				return 1
 			fi
 			#persist any variable and file changes made in a strategy to the GRAM
@@ -714,12 +717,13 @@ workStop()
 	IFS=$'\n' read -d '' -r -a LIST <<< "$CANDISPOSEKEYS"
 	for EACH in "${LIST[@]}"
 	do
+		VAL=$(echo "$GRAM" | kvgGet "$EACH") 
 		#run the function
-		eval "$EACH"
+		eval "$VAL"
 		RV=$?
 		if [[ "$RV" != 0 ]]; then
 			#kack
-			debecho workStop dispose precondition fail "$EACH"
+			debecho workStop dispose precondition fail "$VAL"
 			return 1
 		fi
 		#persist any variable and file changes made in a strategy to the GRAM
@@ -924,4 +928,4 @@ workWatch()
 
 }
 readonly -f workWatch
-debugFlagOn workWatch
+#debugFlagOn workWatch

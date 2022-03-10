@@ -114,7 +114,7 @@ kvgSet()
 		debecho kvgSet no key provided
 		return 1	
 	fi
-	local VAL="$2"
+	local VAL="${@:2}"
 	
 	debecho kvgSet key "$KEY"
 	debecho kvgSet val "$VAL"
