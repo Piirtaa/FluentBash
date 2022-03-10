@@ -182,7 +182,7 @@ workDumpAllVars()
 	return 0
 }
 readonly -f workDumpAllVars
-debugFlagOn workDumpAllVars
+#debugFlagOn workDumpAllVars
 
 #UoWGRAM file primitives ----------------------
 
@@ -341,7 +341,23 @@ workEmergeFunction()
 	local GRAM=$(getStdIn)
 	local KEY="_FN_""$FNNAME"
 	local VAL=$(echo "$GRAM" | kvgGet "$KEY") 
-	eval "$VAL"
+	
+	#if the function already exists 
+	if [[ $(type -t "$FNNAME") == function ]]; then
+		
+		#are they the same definitions?  then skip
+		local CURRENTFNDEF=$(declare -f "$FNNAME")	
+		
+		if [[ "$CURRENTFNDEF" == "$VAL" ]] ; then
+			return 0
+		fi
+		
+		#not the same so load it up
+		eval "$VAL"		
+	else
+		eval "$VAL"
+	fi
+	
 	return 0
 }
 readonly -f workEmergeFunction
@@ -366,6 +382,51 @@ workEmergeAllFunctions()
 readonly -f workEmergeAllFunctions
 #debugFlagOn workEmergeAllFunctions
 
+#UoWGRAM state change ---------------------------
+
+#description:  changes the state of the gram to the next slot
+#usage:	echo $GRAM | workChangeState expectedCurrent
+workChangeState()
+{
+	local GRAM EXPECTED STATE
+	GRAM=$(getStdIn)
+	EXPECTED="$1"
+	STATE=$(echo "$GRAM" | kvgGet state)
+	
+	if [[ "$STATE" != "$EXPECTED" ]] ; then
+		debecho workChangeState unexpected transition.  expected: "$EXPECTED"  current: "$STATE"
+		return 1	
+	fi
+	
+	#one-way sequence
+	#pending initialized running stopped disposed
+	case "$STATE" in
+		pending)
+	    	debecho workChangeState changed to initialized
+	  		GRAM=$(echo "$GRAM" | kvgSet state initialized )
+	   	;;
+		initialized)
+	    	debecho workChangeState changed to running
+	  		GRAM=$(echo "$GRAM" | kvgSet state running )
+	   	;;
+		running)
+	    	debecho workChangeState changed to stopped
+	  		GRAM=$(echo "$GRAM" | kvgSet state stopped )
+	   	;;
+		stopped)
+	    	debecho workChangeState changed to disposed
+	  		GRAM=$(echo "$GRAM" | kvgSet state disposed )
+	   	;;
+		*)
+	    	debecho workChangeState no change
+	    	return 1
+	    	;;
+	esac	
+	echo "$GRAM"
+	return 0
+}
+readonly -f workChangeState
+#debugFlagOn workChangeState
 #UoWGRAM strategy builders ----------------------
 
 #description:  add init function to the gram
@@ -507,13 +568,13 @@ workStart()
 	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
 		
 	#emerge all functions, vars and files
-	debecho workStart emerging vars
+	#debecho workStart emerging vars
 	workEmergeAllVars <<< "$GRAM"
 
-	debecho workStart emerging functions 
+	#debecho workStart emerging functions 
 	workEmergeAllFunctions <<< "$GRAM"
 
-	debecho workStart emerging files
+	#debecho workStart emerging files
 	workEmergeAllFiles <<< "$GRAM"	
 		
 	#get all keys
@@ -540,6 +601,8 @@ workStart()
 				debecho workStart init precondition fail "$VAL"
 				return 1
 			fi
+			debecho workStart init precondition success "$VAL"
+			
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
@@ -562,15 +625,25 @@ workStart()
 				debecho workStart init fail
 				return 1
 			fi
+			debecho workStart init succeeds
+			
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		fi
 
-		#reupdate HASH based on the output GRAM
-		GRAM=$(echo "$GRAM" | kvgSet state initialized)
-		STATE=initialized		
+		#change state
+		GRAM=$(echo "$GRAM" | workChangeState pending)
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStart state change error
+			return 1
+		else
+			STATE=initialized		
+			#debecho workStart new gram "$GRAM"
+		fi
 	fi
 
 	#canStart preconditions
@@ -591,6 +664,8 @@ workStart()
 				debecho workStart start precondition fail "$VAL"
 				return 1
 			fi
+			debecho workStart start precondition success "$VAL"
+
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
@@ -613,15 +688,25 @@ workStart()
 				debecho workStart start fail
 				return 1
 			fi
+			debecho workStart start success
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		fi
 
-		#reupdate HASH based on the output GRAM
-		GRAM=$(echo "$GRAM" | kvgSet state running)
-		STATE=running		
+		#change state
+		GRAM=$(echo "$GRAM" | workChangeState initialized)
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStart state change error
+			return 1
+		else
+			STATE=running		
+			#debecho workStart new gram "$GRAM"
+		fi
+	
 	fi
 
 	echo "$GRAM"
@@ -651,12 +736,31 @@ workStop()
 	#eval "$ENVIRON" &>/dev/null	#hide any declaration errors
 
 	#emerge all functions, vars and files
-	debecho workStart emerging vars
+	#debecho workStop emerging vars
 	workEmergeAllVars <<< "$GRAM"
 
 	local KEYS LIST EACH RV VAL	
 	#get all keys
 	KEYS=$(echo "$GRAM" | kvgGetAllKeys)
+
+	#if stopping from initialized, we transition to the disposing case
+	#the assumption is any initialization actions are cleared up in disposal
+	#and any running actions are cleared up in stopping
+	if [[ "$STATE" == initialized ]]; then	
+		#we bypass running and stopping
+		debecho workStop transitioning from initialized to stopped
+		#change state
+		GRAM=$(echo "$GRAM" | workChangeState initialized | workChangeState running )
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStop state change error
+			return 1
+		else
+			STATE=stopped		
+			#debecho workStop new gram "$GRAM"
+		fi
+	fi
 		
 	#canStop preconditions
 	if [[ "$STATE" == running ]]; then
@@ -676,6 +780,8 @@ workStop()
 				debecho workStop stop precondition fail "$VAL"
 				return 1
 			fi
+			debecho workStop stop precondition success "$VAL"
+			
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
@@ -698,71 +804,97 @@ workStop()
 				debecho workStop stop fail
 				return 1
 			fi
+			debecho workStop stop success
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		fi
 
-		#reupdate HASH based on the output GRAM
-		GRAM=$(echo "$GRAM" | kvgSet state stopped)
-		STATE=stopped		
-	fi
-
-	#canDispose preconditions
-	debecho workStop canDispose begins
-	#get all "canDispose" entries
-	local CANDISPOSEKEYS=$(echo "$KEYS" |  doEachLine ifStartsWith "canDispose" | doEachLine getAfter "canDispose" )
-	debecho workStop canDisposeKeys "$CANDISPOSEKEYS"
-	IFS=$'\n' read -d '' -r -a LIST <<< "$CANDISPOSEKEYS"
-	for EACH in "${LIST[@]}"
-	do
-		VAL=$(echo "$GRAM" | kvgGet "$EACH") 
-		#run the function
-		eval "$VAL"
+		#change state
+		GRAM=$(echo "$GRAM" | workChangeState running)
 		RV=$?
 		if [[ "$RV" != 0 ]]; then
 			#kack
-			debecho workStop dispose precondition fail "$VAL"
+			debecho workStop state change error
 			return 1
+		else
+			STATE=stopped		
+			#debecho workStop new gram "$GRAM"
 		fi
-		#persist any variable and file changes made in a strategy to the GRAM
-		GRAM=$(echo "$GRAM" | workPersistAllVars)
-		GRAM=$(echo "$GRAM" | workPersistAllFiles)
-		workEmergeAllVars <<< "$GRAM"
-	done
-
-	debecho workStop dispose begins
-	VAL=$(echo "$GRAM" | kvgGet "dispose") 
-	debecho workStop val "$VAL"
-		
-	if [[ ! -z "$VAL" ]]; then
-		#eval the logic
-		eval "$VAL"
-		RV=$?
-		if [[ "$RV" != 0 ]]; then
-			#kack
-			debecho workStop dispose fail
-			return 1
-		fi
-		#persist any variable and file changes made in a strategy to the GRAM
-		GRAM=$(echo "$GRAM" | workPersistAllVars)
-		GRAM=$(echo "$GRAM" | workPersistAllFiles)
-		workEmergeAllVars <<< "$GRAM"
 	fi
+
+	#dispose strategy
+	if [[ "$STATE" == stopped ]]; then
+		#canDispose preconditions
+		debecho workStop canDispose begins
+		#get all "canDispose" entries
+		local CANDISPOSEKEYS=$(echo "$KEYS" |  doEachLine ifStartsWith "canDispose" | doEachLine getAfter "canDispose" )
+		debecho workStop canDisposeKeys "$CANDISPOSEKEYS"
+		IFS=$'\n' read -d '' -r -a LIST <<< "$CANDISPOSEKEYS"
+		for EACH in "${LIST[@]}"
+		do
+			VAL=$(echo "$GRAM" | kvgGet "$EACH") 
+			#run the function
+			eval "$VAL"
+			RV=$?
+			if [[ "$RV" != 0 ]]; then
+				#kack
+				debecho workStop dispose precondition fail "$VAL"
+				return 1
+			fi
+			debecho workStop dispose precondition success "$VAL"
+			
+			#persist any variable and file changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
+		done
+	fi
+
+	if [[ "$STATE" == stopped ]]; then
+		debecho workStop dispose begins
+		VAL=$(echo "$GRAM" | kvgGet "dispose") 
+		debecho workStop val "$VAL"
+			
+		if [[ ! -z "$VAL" ]]; then
+			#eval the logic
+			eval "$VAL"
+			RV=$?
+			if [[ "$RV" != 0 ]]; then
+				#kack
+				debecho workStop dispose fail
+				return 1
+			fi
+			debecho workStop dispose success
+			
+			#persist any variable and file changes made in a strategy to the GRAM
+			GRAM=$(echo "$GRAM" | workPersistAllVars)
+			GRAM=$(echo "$GRAM" | workPersistAllFiles)
+			workEmergeAllVars <<< "$GRAM"
+		fi
+
+		#clear up files		
+		$(echo "$GRAM" | workRemoveAllFiles)
 	
-	$(echo "$GRAM" | workRemoveAllFiles)
-
-	#reupdate HASH based on the output GRAM
-	GRAM=$(echo "$GRAM" | kvgSet state disposed)
-	STATE=disposed		
+		#change state
+		GRAM=$(echo "$GRAM" | workChangeState stopped)
+		RV=$?
+		if [[ "$RV" != 0 ]]; then
+			#kack
+			debecho workStop state change error
+			return 1
+		else
+			STATE=disposed		
+			#debecho workStop new gram "$GRAM"
+		fi
+	fi
 
 	echo "$GRAM"
 	return 0	
-
 }
 readonly -f workStop
-debugFlagOn workStop
+#debugFlagOn workStop
 
 #boilerplate trigger and polling functions ---------------------------
 
@@ -845,7 +977,7 @@ workPoll()
 	return 0
 }
 readonly -f workPoll
-debugFlagOn workPoll
+#debugFlagOn workPoll
 
 #description:  does a polling watch for conditions on a job.  the gram must be stored in a file
 #usage:  workWatch gramFileName intervalSeconds (optional.  default 60)
@@ -862,10 +994,11 @@ workWatch()
 		return 1  
 	fi		
 	
-	local INTERVAL=${2:-'60'}
+	local INTERVAL=${2:-60}
 
 	#loop
-	while true;
+	local BREAKCONDITION=false	
+	while [[ "$BREAKCONDITION" == false ]] ;
 	do
 		#load up the gram		
 		debecho workWatch loading uow file "$FILENAME"
@@ -877,7 +1010,7 @@ workWatch()
 		
 		local STATE=$(echo "$GRAM" | kvgGet state)
 		debecho workWatch state "$STATE"
-		echo "$GRAM" | workDumpAllVars
+		#echo "$GRAM" | workDumpAllVars
 		
 		#state transition guard check
 		local STARTGUARDCHECK
@@ -889,11 +1022,13 @@ workWatch()
 			RV=$?
 			if [[ "$RV" == 0 ]] ; then
 				debecho workWatch starting
-				GRAM=$(echo "$GRAM" | workStart)
-				
-				workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
-				debecho workWatch persisting uow file "$FILENAME"
-				echo "$GRAM" > "$FILENAME" 
+				GRAM=$(echo "$GRAM" | workStart )
+				RV=$?
+				if [[ "$RV" == 0 ]] ; then
+					workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
+					debecho workWatch persisting uow file "$FILENAME"
+					echo "$GRAM" > "$FILENAME" 
+				fi
 			fi
 		else
 			local STOPGUARDCHECK
@@ -906,24 +1041,25 @@ workWatch()
 				if [[ "$RV" == 0 ]] ; then
 					debecho workWatch stopping
 					GRAM=$(echo "$GRAM" | workStop)
-					workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
-
-					debecho workWatch persisting uow file "$FILENAME"
-					echo "$GRAM" > "$FILENAME" 
-				fi
-				
-				#if it is disposed (meaning stopping completed fully) we exit the loop
-				STATE=$(echo "$GRAM" | kvgGet state)
-				if [[ "$STATE" == disposed ]] ; then
-					break
+					RV=$?
+					if [[ "$RV" == 0 ]] ; then
+						workEmergeAllVars <<< "$GRAM"  #note: anytime we are in a subshell that will mutate the gram we need to reemerge the vars
+						debecho workWatch persisting uow file "$FILENAME"
+						echo "$GRAM" > "$FILENAME"
+					fi 
 				fi
 			fi	
 		fi		
-
-		#do the polling job
-		echo "$GRAM" | workPoll 
-	
-	   sleep $INTERVAL;
+		
+		#reload state.  if it is disposed we exit the loop
+		STATE=$(echo "$GRAM" | kvgGet state)
+		if [[ "$STATE" == disposed ]] ; then
+			BREAKCONDITION=true
+		else
+			#do the polling job
+			echo "$GRAM" | workPoll 
+	   	sleep $INTERVAL;
+		fi
 	done
 
 }

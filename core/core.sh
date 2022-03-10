@@ -58,7 +58,14 @@
 	#usage: debecho flagName text to write out
 	debecho () 
 	{
-		isDebugFlagOn "$1" && { shift; echo -e "[\e[01;31mfunction:${FUNCNAME[1]} line:${BASH_LINENO} $@\e[0m]" >&2; } 
+		local IDX STACK
+		
+		for (( IDX=${#FUNCNAME[@]}-1 ; IDX>=1 ; IDX-- )) ; do
+			STACK="$STACK""${FUNCNAME[IDX]}""-->"			
+		done
+		
+		#isDebugFlagOn "$1" && { shift; echo -e "[\e[01;31mfunction:${FUNCNAME[2]} function:${FUNCNAME[1]} line:${BASH_LINENO} $@\e[0m]" >&2; } 
+		isDebugFlagOn "$1" && { shift; echo -e "[\e[01;31m${STACK} line:${BASH_LINENO} $@\e[0m]" >&2; } 
 																												#						         ^^^ to stderr
 	  	return 0	  	
 	}
@@ -79,6 +86,30 @@
 	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
 	#debugFlagOn dumpDirContents	
 	
+	waitForKeyPress()
+	{
+		echo "Press any key to continue"
+		while [ true ] ; do
+			read -t 3 -n 1
+			if [ $? = 0 ] ; then
+				return 0 
+			else
+				echo "waiting for the keypress"
+			fi
+		done	
+	}
+	readonly -f waitForKeyPress
+	
+	#generates random alpha numeric of given length (defaults to 5)
+	#usage:  genID length
+	genID()
+	{
+		local LENGTH
+		LENGTH="${1:-5}"
+		cat /dev/urandom | env LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w "$LENGTH" | head -n 1	
+	}
+	readonly -f genID
+	
 	#SCRIPT LOADER
 
 	#hash of debug flags
@@ -95,6 +126,9 @@
 			#load it		
 			LOADED_SCRIPTS["$1"]=$(date +"%y%m%d%H%M%S")
 			source "$BASH_DIR"'/../'"$1"
+
+			debecho loadScript loaded "$1"
+			
 			return 0
 		fi
 		

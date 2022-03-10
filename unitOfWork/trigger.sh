@@ -6,8 +6,11 @@
 [ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
+
+
 #load dependencies.  
 loadScript unitOfWork/uow.sh
+
 
 #description:  a function that does nothing
 #usage:  emptyFn
@@ -16,6 +19,7 @@ emptyFn()
 	return 0
 }
 readonly -f emptyFn
+
 
 #description: creates a trigger uow, writing a trigger file (a uow file) with the provided name (arg 1)
 #usage:  createTrigger name triggerFn beforeFn afterFn
@@ -43,6 +47,33 @@ createTrigger()
 }
 readonly -f createTrigger
 
+
+#description: chains triggers together such that when the first completes the second is activated
+#usage:	chainTriggers firstTriggerName secondTriggerName pollingSecs
+chainTriggers()
+{
+	local TRIGGER1 TRIGGER2 UOW INTERVALSECS
+	TRIGGER1="$1"
+	TRIGGER2="$2"	
+	INTERVALSECS="${3:-60}"		
+
+	if [[ ! -f "$TRIGGER1" ]]; then
+		debecho chainTriggers "$TRIGGER1" does not exist
+		return 1  
+	fi		
+	
+	if [[ ! -f "$TRIGGER2" ]]; then
+		debecho chainTriggers "$TRIGGER1" does not exist
+		return 1  
+	fi		
+
+	UOW=$(cat "$TRIGGER1")
+	UOW=$(echo "$UOW" | workSetDisposeStrategy activateTrigger "$TRIGGER2" "$INTERVALSECS" )
+	echo "$UOW" > "$TRIGGER1"
+}
+readonly -f chainTriggers
+
+
 #description: activates a trigger
 #usage:	activateTrigger myName pollingSecs
 activateTrigger()
@@ -55,27 +86,3 @@ activateTrigger()
 	workWatch "$NAME" "$INTERVALSECS"
 }
 readonly -f activateTrigger
-
-#description: chains triggers together such that when the first completes the second is activated
-#usage:	chainTriggers firstTriggerName secondTriggerName
-chainTriggers()
-{
-	local TRIGGER1 TRIGGER2 UOW
-	TRIGGER1="$1"
-	TRIGGER2="$2"	
-	
-	if [[ ! -f "$TRIGGER1" ]]; then
-		debecho chainTriggers "$TRIGGER1" does not exist
-		return 1  
-	fi		
-	
-	if [[ ! -f "$TRIGGER2" ]]; then
-		debecho chainTriggers "$TRIGGER1" does not exist
-		return 1  
-	fi		
-
-	UOW=$(cat "$TRIGGER1")
-	UOW=$(echo "$UOW" | workSetDisposeStrategy activateTrigger "$TRIGGER2" 5 )
-	echo "$UOW" > "$TRIGGER1"
-}
-readonly -f chainTriggers

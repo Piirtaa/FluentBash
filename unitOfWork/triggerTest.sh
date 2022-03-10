@@ -45,6 +45,7 @@ afterStep1()
 }
 createTrigger step1 step1Trigger beforeStep1 afterStep1
 
+
 #step 2
 beforeStep2()
 {
@@ -63,12 +64,12 @@ afterStep2()
 createTrigger step2 step2Trigger beforeStep2 afterStep2
 
 #link step1 to step2
-chainTriggers step1 step2
+chainTriggers step1 step2 20
 
 #fire it off
-activateTrigger step1 5
+activateTrigger step1 20
 
-sleep 30
+sleep 40
 
 cat testFile
 rm testFile

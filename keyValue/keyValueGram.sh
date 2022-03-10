@@ -116,31 +116,43 @@ kvgSet()
 	fi
 	local VAL="${@:2}"
 	
-	debecho kvgSet key "$KEY"
-	debecho kvgSet val "$VAL"
+	#debecho kvgSet key "$KEY"
+	#debecho kvgSet val "$VAL"
 			
 	#convert the gram into a hash
 	local GRAM=$(getStdIn)
-	debecho kvgSet gram "$GRAM"
+	#debecho kvgSet gram "$GRAM"
+	
+	#get the initial value
+	local ORIGVAL=$(echo "$GRAM" | kvgGet "$KEY" )	
+	
+	if [[ "$VAL" != "$ORIGVAL" ]]; then
+		local -A HASH
+		readKeyValueGram HASH <<< "$GRAM"
 		
-	local -A HASH
-	readKeyValueGram HASH <<< "$GRAM"
-	
-	
-	#write the kvp
-	HASH["$KEY"]="$VAL"
-	debecho kvgSet writing "$KEY" "$VAL"
+		#if the hash has no id, create one.  this is a reserved key in the hashtable
+		local ID
+		ID="${HASH[___id___]}"
+		if [[ -z "$ID" ]]; then
+			ID=$(genID)
+			HASH[___id___]="$ID"		
+		fi
+		
+		#write the kvp
+		HASH["$KEY"]="$VAL"
+		debecho kvgSet writing on "$ID" key:"$KEY" val:"$VAL"
 
-	#convert it back into a gram
-	GRAM=$(getKeyValueGram HASH) 
-	debecho kvgSet gram "$GRAM"
+		#convert it back into a gram
+		GRAM=$(getKeyValueGram HASH) 
+		#debecho kvgSet gram "$GRAM"
+	fi
 	
 	#pipe it back out
 	echo "$GRAM"
 	return 0
 }
 readonly -f kvgSet
-#debugFlagOn kvgSet
+debugFlagOn kvgSet
 
 #description:  gets an entry in the gram
 #usage: echo $GRAM | kvgGet key
