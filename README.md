@@ -206,7 +206,9 @@ IN-MEMORY (using tmpfs) KEY VALUE STORE
 
 
 TRIGGERS
+
 	#load trigger library 
+
 	loadScript unitOfWork/trigger.sh
 	
 	#define a series of steps.  
