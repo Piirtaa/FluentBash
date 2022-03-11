@@ -32,27 +32,61 @@ readonly -f emptyFn
 #usage:  			eg.	myName myTrigger emptyFn doSomethingAfter
 createTrigger()
 {
-	local NAME SETUPFN TRIGGERFN POSTFN UOW
-	NAME="${1:trigger}"
-	TRIGGERFN="$2"
-	BEFOREFN="$3"
-	AFTERFN="$4"
+	local NAME UOW
+	NAME="$1"
+	if [[ -z "$NAME" ]] ; then
+		debecho createTrigger name must be provided
+		return 1
+	fi
+	shift
 	
 	#construct a  unit of work
 	UOW=$(workCreate)
-	if [[ ! -z "$BEFOREFN" ]]; then
-		UOW=$(echo "$UOW" | workSetInitStrategy "$BEFOREFN" )
-	fi
-	if [[ ! -z "$AFTERFN" ]]; then
-		UOW=$(echo "$UOW" | workSetStopStrategy "$AFTERFN" )
-	fi
-	UOW=$(echo "$UOW" | workSetStartTriggerStrategy emptyFn | workSetStopTriggerStrategy "$TRIGGERFN" )
+	UOW=$(echo "$UOW" | workSetStartTriggerStrategy emptyFn | workSetStopTriggerStrategy $@ )
 	
 	echo "$UOW" > "$NAME"
+	echo "$NAME"
 	return 0	
 }
 readonly -f createTrigger
 
+#description:  sets the action after the trigger fires
+#usage:  echo triggerFileName | doAfterTrigger myfunction args 
+doAfterTrigger()
+{
+	local NAME UOW
+	NAME=$(getStdIn)
+
+	if [[ ! -f "$NAME" ]]; then
+		debecho doAfterTrigger invalid name
+		return 1
+	fi
+	UOW=$(cat "$NAME" | workSetStopStrategy $@ )
+
+	echo "$UOW" > "$NAME"
+	echo "$NAME"
+	return 0	
+}
+readonly -f doAfterTrigger
+
+#description:  sets the action after the trigger fires
+#usage:  echo triggerFileName | doBeforeTrigger myfunction args 
+doBeforeTrigger()
+{
+	local NAME UOW
+	NAME=$(getStdIn)
+
+	if [[ ! -f "$NAME" ]]; then
+		debecho doBeforeTrigger invalid name
+		return 1
+	fi
+	UOW=$(cat "$NAME" | workSetInitStrategy $@ )
+
+	echo "$UOW" > "$NAME"
+	echo "$NAME"
+	return 0	
+}
+readonly -f doBeforeTrigger
 
 #description: chains triggers together such that when the first completes the second is activated
 #usage:	chainTriggers firstTriggerName secondTriggerName pollingSecs

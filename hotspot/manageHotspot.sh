@@ -53,6 +53,7 @@ start()
 stop()
 {
 	cat "$WORKFILE" | workStop  
+	rm "$WORKFILE"
 }
 
 

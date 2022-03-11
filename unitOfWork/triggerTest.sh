@@ -28,6 +28,7 @@ echo ===================
 #define a series of steps
 touch testFile
 
+
 #step 1
 beforeStep1()
 {
@@ -43,7 +44,25 @@ afterStep1()
 	echo "after step1" >> testFile
 	return 0
 }
-createTrigger step1 step1Trigger beforeStep1 afterStep1
+#debugFlagOn kvgSet
+#debugFlagOn workIsStartTriggered
+#debugFlagOn workIsStopTriggered
+#debugFlagOn workWatch
+
+createTrigger step1 step1Trigger | doBeforeTrigger beforeStep1  | doAfterTrigger afterStep1 > /dev/null
+
+
+echo activating trigger
+activateTrigger step1 5
+echo cleanup
+cat testFile
+rm testFile
+rm step1 
+
+
+echo next test
+
+createTrigger step1 step1Trigger | doBeforeTrigger beforeStep1 | doAfterTrigger afterStep1 > /dev/null
 
 
 #step 2
@@ -61,16 +80,15 @@ afterStep2()
 	echo "after step2" >> testFile
 	return 0
 }
-createTrigger step2 step2Trigger beforeStep2 afterStep2
+createTrigger step2 step2Trigger | doBeforeTrigger beforeStep2 | doAfterTrigger afterStep2 > /dev/null
 
 #link step1 to step2
-chainTriggers step1 step2 20
+chainTriggers step1 step2 10
 
 #fire it off
-activateTrigger step1 20
-
-sleep 40
-
+echo activating trigger
+activateTrigger step1 5
+echo cleanup
 cat testFile
 rm testFile
 rm step1 
