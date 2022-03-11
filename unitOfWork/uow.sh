@@ -608,6 +608,7 @@ workStart()
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"				
 		done
+		debecho workStart canInit ends
 	fi
 	
 	#init strategy
@@ -625,7 +626,7 @@ workStart()
 				debecho workStart init fail
 				return 1
 			fi
-			debecho workStart init succeeds
+			debecho workStart init success
 			
 			#persist any variable and file changes made in a strategy to the GRAM
 			GRAM=$(echo "$GRAM" | workPersistAllVars)
@@ -644,6 +645,7 @@ workStart()
 			STATE=initialized		
 			#debecho workStart new gram "$GRAM"
 		fi
+		debecho workStart init ends
 	fi
 
 	#canStart preconditions
@@ -671,6 +673,7 @@ workStart()
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		done
+		debecho workStart canStart ends
 	fi
 	
 	#start strategy
@@ -706,7 +709,7 @@ workStart()
 			STATE=running		
 			#debecho workStart new gram "$GRAM"
 		fi
-	
+		debecho workStart start ends
 	fi
 
 	echo "$GRAM"
@@ -748,7 +751,7 @@ workStop()
 	#and any running actions are cleared up in stopping
 	if [[ "$STATE" == initialized ]]; then	
 		#we bypass running and stopping
-		debecho workStop transitioning from initialized to stopped
+		debecho workStop transitioning from initialized to stopped begins
 		#change state
 		GRAM=$(echo "$GRAM" | workChangeState initialized | workChangeState running )
 		RV=$?
@@ -760,6 +763,7 @@ workStop()
 			STATE=stopped		
 			#debecho workStop new gram "$GRAM"
 		fi
+		debecho workStop transitioning from initialized to stopped ends
 	fi
 		
 	#canStop preconditions
@@ -787,6 +791,7 @@ workStop()
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		done
+		debecho workStop canStop ends
 	fi
 	
 	#stop strategy
@@ -822,6 +827,7 @@ workStop()
 			STATE=stopped		
 			#debecho workStop new gram "$GRAM"
 		fi
+		debecho workStop stop ends
 	fi
 
 	#dispose strategy
@@ -850,6 +856,7 @@ workStop()
 			GRAM=$(echo "$GRAM" | workPersistAllFiles)
 			workEmergeAllVars <<< "$GRAM"
 		done
+		debecho workStop canDispose ends
 	fi
 
 	if [[ "$STATE" == stopped ]]; then
@@ -888,6 +895,7 @@ workStop()
 			STATE=disposed		
 			#debecho workStop new gram "$GRAM"
 		fi
+		debecho workStop dispose ends
 	fi
 
 	echo "$GRAM"
@@ -926,7 +934,7 @@ workIsStartTriggered()
 	return 1
 }
 readonly -f workIsStartTriggered
-debugFlagOn workIsStartTriggered
+#debugFlagOn workIsStartTriggered
 
 #description:  tests the stop trigger condition and runs the stop if true
 #usage:  echo "$GRAM" | workIsStopTriggered
@@ -956,7 +964,7 @@ workIsStopTriggered()
 	return 1
 }
 readonly -f workIsStopTriggered
-debugFlagOn workIsStopTriggered
+#debugFlagOn workIsStopTriggered
 
 #description:  runs the polling strategy
 #usage:  echo "$GRAM" | workPoll
@@ -1022,6 +1030,11 @@ workWatch()
 			RV=$?
 			if [[ "$RV" == 0 ]] ; then
 				debecho workWatch starting
+				#IMPORTANT NOTE:  the following operation will WAIT for the workStart operation to complete.
+				#The $(...) command substitution mechanism waits for EOF on the pipe that the subshell's stdout is connected to.
+				# So even if you background a command in the subshell, the main shell will still wait for it to finish and close its stdout.
+				# To avoid waiting for this, you need to redirect its output away from the pipe.
+				# Thus any strategies in the UoW that are backgrounded MUST redirect output or the following call will wait indefinitely.
 				GRAM=$(echo "$GRAM" | workStart )
 				RV=$?
 				if [[ "$RV" == 0 ]] ; then
@@ -1040,6 +1053,11 @@ workWatch()
 				RV=$?
 				if [[ "$RV" == 0 ]] ; then
 					debecho workWatch stopping
+					#IMPORTANT NOTE:  the following operation will WAIT for the workStart operation to complete.
+					#The $(...) command substitution mechanism waits for EOF on the pipe that the subshell's stdout is connected to.
+					# So even if you background a command in the subshell, the main shell will still wait for it to finish and close its stdout.
+					# To avoid waiting for this, you need to redirect its output away from the pipe.
+					# Thus any strategies in the UoW that are backgrounded MUST redirect output or the following call will wait indefinitely.
 					GRAM=$(echo "$GRAM" | workStop)
 					RV=$?
 					if [[ "$RV" == 0 ]] ; then
@@ -1065,3 +1083,4 @@ workWatch()
 }
 readonly -f workWatch
 #debugFlagOn workWatch
+

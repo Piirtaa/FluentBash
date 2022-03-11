@@ -11,7 +11,13 @@ source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 #load dependencies.  
 loadScript unitOfWork/uow.sh
 
-
+#IMPORTANT NOTE:  the trigger strategies will WAIT for their operation to complete.  
+#The uow.sh function "workWatch" invokes them in a subshell.  
+#The $(...) command substitution mechanism waits for EOF on the pipe that the subshell's stdout is connected to.
+# So even if you background a command in the subshell, the main shell will still wait for it to finish and close its stdout.
+# To avoid waiting for this, you need to redirect its output away from the pipe.
+# Thus any strategies in the UoW that are backgrounded MUST redirect output or the following call will wait indefinitely.
+				
 #description:  a function that does nothing
 #usage:  emptyFn
 emptyFn()

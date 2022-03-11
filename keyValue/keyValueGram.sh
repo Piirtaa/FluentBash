@@ -152,7 +152,7 @@ kvgSet()
 	return 0
 }
 readonly -f kvgSet
-debugFlagOn kvgSet
+#debugFlagOn kvgSet
 
 #description:  gets an entry in the gram
 #usage: echo $GRAM | kvgGet key

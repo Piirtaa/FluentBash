@@ -73,3 +73,5 @@ sleep 40
 
 cat testFile
 rm testFile
+rm step1 
+rm step2
