@@ -13,6 +13,8 @@ Features:
 	
 	Reactive programming allowing triggers to be defined and chained together which are persistant across reboot.
 
+	Fluent validation of function signatures, decoupled from function 
+	
 	Much cleaner and more readable Bash scripting
 
 
@@ -235,3 +237,38 @@ TRIGGERS
 
 	#fire it off, with polling at 5 second intervals
 	activateTrigger step1 5
+
+SIGNATURE VALIDATION
+
+	#load dependencies.  
+
+	loadScript validation/functionSig.sh
+
+	loadScript validation/validators.sh
+
+	#description: a function that puts conditions around each parameter 
+	
+	#usage:  addThreeNumbers 1 2 3 
+	
+	addThreeNumbers()
+	{
+		local arg1 arg2 arg3
+		arg1="$1"
+		arg2="$2"
+		arg3="$3"
+	
+		echo $(( arg1 + arg2 + arg3 ))	
+	}
+
+	#define a validation signature
+	SIG=$(createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 | addParameter arg3 3 false 0)
+	SIG=$(echo "$SIG" | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric)
+	SIG=$(echo "$SIG" | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15)
+
+	#passes validation
+	
+	validateSig addThreeNumbers 1 11 15
+
+	#does not pass validation
+	
+	validateSig addThreeNumbers 1 11 25
