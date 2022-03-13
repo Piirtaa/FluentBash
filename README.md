@@ -244,7 +244,7 @@ SIGNATURE VALIDATION
 	loadScript validation/functionSig.sh
 	loadScript validation/validators.sh
 
-	#description: a function that puts conditions around each parameter 
+	#description: a function that adds numbers 
 	#usage:  addThreeNumbers 1 2 3 
 	addThreeNumbers()
 	{
@@ -256,7 +256,10 @@ SIGNATURE VALIDATION
 		echo $(( arg1 + arg2 + arg3 ))	
 	}
 
-	#define a validation signature
+	#signature validation injects the following:
+	#arg 1 must be less than 10
+	#arg 2 must be greater than 10
+	#arg 3 must be less than 20 and greater than or equal to 15
 	SIG=$(createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 | addParameter arg3 3 false 0)
 	SIG=$(echo "$SIG" | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric)
 	SIG=$(echo "$SIG" | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15)
