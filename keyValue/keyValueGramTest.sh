@@ -95,3 +95,7 @@ TESTCASE 'round trip3'
 #getKeyValueGram HASH
 
 
+TESTCASE 'init inline'
+	[ "$(NEWGRAM=$(kvgSet keyA valueA) ;  echo "$NEWGRAM" | kvgGet keyA )" == "valueA" ]
+	RESULT	
+
