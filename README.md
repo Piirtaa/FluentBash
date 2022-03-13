@@ -241,15 +241,11 @@ TRIGGERS
 SIGNATURE VALIDATION
 
 	#load dependencies.  
-
 	loadScript validation/functionSig.sh
-
 	loadScript validation/validators.sh
 
 	#description: a function that puts conditions around each parameter 
-	
 	#usage:  addThreeNumbers 1 2 3 
-	
 	addThreeNumbers()
 	{
 		local arg1 arg2 arg3
@@ -266,9 +262,7 @@ SIGNATURE VALIDATION
 	SIG=$(echo "$SIG" | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15)
 
 	#passes validation
-	
 	validateSig addThreeNumbers 1 11 15
 
 	#does not pass validation
-	
 	validateSig addThreeNumbers 1 11 25
