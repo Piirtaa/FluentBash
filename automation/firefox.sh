@@ -197,4 +197,3 @@ ff_runInSandbox()
 	return 0
 }
 
-ff_runInSandbox helloWorld.js helloWorld

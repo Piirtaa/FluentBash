@@ -172,9 +172,9 @@ appendToFile()
 readonly -f appendToFile
 #debugFlagOn appendToFile
 
-#joins two lists together of the same length
-#usage:  echo mylist | joinLists myotherlistVarName joinString 
-joinLists()
+#joins two lists together of the same length, side by side
+#usage:  echo mylist | sideJoinLists myotherlistVarName joinString 
+sideJoinLists()
 {
 	local STDIN=$(getStdIn)
 	local VARNAME="$1"
@@ -189,7 +189,7 @@ joinLists()
 	IFS=$'\n' read -d '' -r -a ARR1 <<< "$STDIN"
 	IFS=$'\n' read -d '' -r -a ARR2 <<< "$LIST2"
 	
-	#debecho joinLists arr1 "${ARR1[*]}"
+	#debecho sideJoinLists arr1 "${ARR1[*]}"
 	
 	for ((i = 0 ; i < "$LEN" ; i++)); do
 		ITEM1="${ARR1[$i]}"
@@ -198,5 +198,5 @@ joinLists()
  	done
  	return 0
 }
-readonly -f joinLists
-debugFlagOn joinLists
+readonly -f sideJoinLists
+debugFlagOn sideJoinLists

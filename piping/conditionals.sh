@@ -34,6 +34,25 @@ ifContains()
 readonly -f ifContains
 #debugFlagOn ifContains
 
+ifNotContains()
+{
+	local STDIN=$(getStdIn)
+	if [[ -z "$STDIN" ]]; then
+		return 1
+	else
+		if [[ "$STDIN" == *"$1"* ]]; then
+			#debecho ifNotContains "$STDIN" does not contain "$1"	
+			return 1
+		else
+			#debecho ifNotContains "$STDIN" contains "$1"	
+			echo "$STDIN"
+			return 0
+		fi
+	fi	
+}
+readonly -f ifNotContains
+#debugFlagOn ifNotContains
+
 #echoes pipe to stdout if stdin contains each arg
 #usage:  echo abc | ifContainsAll b a c | ...will echo abc
 ifContainsAll()
@@ -54,6 +73,25 @@ ifContainsAll()
 }
 readonly -f ifContainsAll
 #debugFlagOn ifContainsAll
+
+ifContainsNone()
+{
+	local STDIN=$(getStdIn)
+	if [[ -z "$STDIN" ]]; then
+		return 1
+	else
+		local EACH
+		for EACH in "$@"; do
+ 			if [[ "$STDIN" == *"$EACH"* ]]; then
+				return 1
+			fi
+		done
+		echo "$STDIN"
+		return 0
+	fi	
+}
+readonly -f ifContainsNone
+#debugFlagOn ifContainsNone
 
 #echoes pipe to stdout if stdin equals $1
 #usage:  echo abc | ifEquals abc | ...will echo abc
