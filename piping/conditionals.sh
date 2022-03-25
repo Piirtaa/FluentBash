@@ -17,7 +17,8 @@ loadScript piping/lists.sh
 #usage:  echo abc | ifContains b | ...will echo abc
 ifContains()
 {
-	local STDIN=$(getStdIn)
+	local STDIN
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
@@ -36,7 +37,8 @@ readonly -f ifContains
 
 ifNotContains()
 {
-	local STDIN=$(getStdIn)
+	local STDIN
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
@@ -57,11 +59,11 @@ readonly -f ifNotContains
 #usage:  echo abc | ifContainsAll b a c | ...will echo abc
 ifContainsAll()
 {
-	local STDIN=$(getStdIn)
+	local STDIN EACH
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
-		local EACH
 		for EACH in "$@"; do
  			if [[ "$STDIN" != *"$EACH"* ]]; then
 				return 1
@@ -76,11 +78,11 @@ readonly -f ifContainsAll
 
 ifContainsNone()
 {
-	local STDIN=$(getStdIn)
+	local STDIN EACH
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
-		local EACH
 		for EACH in "$@"; do
  			if [[ "$STDIN" == *"$EACH"* ]]; then
 				return 1
@@ -97,7 +99,8 @@ readonly -f ifContainsNone
 #usage:  echo abc | ifEquals abc | ...will echo abc
 ifEquals()
 {
-	local STDIN=$(getStdIn)
+	local STDIN
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
@@ -112,12 +115,33 @@ ifEquals()
 readonly -f ifEquals
 #debugFlagOn ifEquals
 
+#echoes pipe to stdout if stdin not equals $1
+#usage:  echo abc | ifNotEquals dafd | ...will echo abc
+ifNotEquals()
+{
+	local STDIN
+	STDIN=$(getStdIn)
+	if [[ -z "$STDIN" ]]; then
+		return 1
+	else
+		if [[ "$STDIN" == "$1" ]]; then
+			return 1
+		else
+			echo "$STDIN"
+			return 0
+		fi
+	fi	
+}
+readonly -f ifNotEquals
+#debugFlagOn ifNotEquals
+
 #echoes pipe to stdout if stdin equals $1
 #usage:  echo abc | ifLengthOf 3 | ...will echo abc
 ifLengthOf()
 {
-	local STDIN=$(getStdIn)
-	local LEN=$(echo "$STDIN" | getLength)
+	local STDIN LEN
+	STDIN=$(getStdIn)
+	LEN=$(echo "$STDIN" | getLength)
 	
 	if [[ "$LEN" == "$1" ]]; then
 		echo "$STDIN"
@@ -131,8 +155,9 @@ readonly -f ifLengthOf
 #usage:  echo abc | ifStartsWith ab | ...will echo abc
 ifStartsWith()
 {
-	local STDIN=$(getStdIn)
-	debecho ifStartsWith stdin "$STDIN"
+	local STDIN
+	STDIN=$(getStdIn)
+	#debecho ifStartsWith stdin "$STDIN"
 	if [[ -z "$STDIN" ]]; then
 		debecho ifStartsWith stdin is empty
 		return 1
@@ -150,10 +175,34 @@ ifStartsWith()
 readonly -f ifStartsWith
 #debugFlagOn ifStartsWith
 
+#usage:  echo abc | ifNotStartsWith cd | ...will echo abc
+ifNotStartsWith()
+{
+	local STDIN
+	STDIN=$(getStdIn)
+	debecho ifNotStartsWith stdin "$STDIN"
+	if [[ -z "$STDIN" ]]; then
+		debecho ifNotStartsWith stdin is empty
+		return 1
+	else
+		if [[ "$STDIN" == "$1"* ]]; then
+			debecho ifNotStartsWith stdin contains "$1"
+			return 1
+		else
+			debecho ifNotStartsWith stdin does not contain "$1"
+			echo "$STDIN"
+			return 0
+		fi
+	fi	
+}
+readonly -f ifNotStartsWith
+#debugFlagOn ifNotStartsWith
+
 #usage:  echo abc | ifEndsWith abc | ...will echo abc
 ifEndsWith()
 {
-	local STDIN=$(getStdIn)
+	local STDIN
+	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
 		return 1
 	else
@@ -171,8 +220,8 @@ readonly -f ifEndsWith
 #usage:  echo blah | command | ifArgsEqual a a | keep on going with output of command
 ifArgsEqual()
 {
-	#grab stdin
-	local STDIN=$(getStdIn)
+	local STDIN
+	STDIN=$(getStdIn)
 	if [[ "$1" != "$2" ]]; then
 		debecho ifArgsEqual error.  not equal "$1" "$2" 
 		return 1
@@ -187,10 +236,10 @@ readonly -f ifArgsEqual
 #usage:  echo $LINES | ifNumberOfLinesEquals 5 | getLine 5 
 ifNumberOfLinesEquals()
 {
-	#grab stdin
-	local STDIN=$(getStdIn)
+	local STDIN COUNT
+	STDIN=$(getStdIn)
 	debecho ifNumberOfLinesEquals stdin "$STDIN"
-	local COUNT=$(echo "$STDIN" | getLineCount)
+	COUNT=$(echo "$STDIN" | getLineCount)
 	debecho ifNumberOfLinesEquals count "$COUNT"
 	debecho ifNumberOfLinesEquals arg1 "$1"
 	
@@ -207,9 +256,9 @@ readonly -f ifNumberOfLinesEquals
 #usage:  echo $LINES | ifNumberOfLinesGreaterThan 5 | getLine 5 
 ifNumberOfLinesGreaterThan()
 {
-	#grab stdin
-	local STDIN=$(getStdIn)
-	local COUNT=$(echo "$STDIN" | getLineCount)
+	local STDIN COUNT
+	STDIN=$(getStdIn)
+	COUNT=$(echo "$STDIN" | getLineCount)
 	
 	if (( "$COUNT" > "$1" )); then
 		echo "$STDIN"
@@ -224,9 +273,9 @@ readonly -f ifNumberOfLinesGreaterThan
 #usage:  echo $LINES | ifNumberOfLinesLessThan 5 | appendLine newLine 
 ifNumberOfLinesLessThan()
 {
-	#grab stdin
-	local STDIN=$(getStdIn)
-	local COUNT=$(echo "$STDIN" | getLineCount)
+	local STDIN COUNT
+	STDIN=$(getStdIn)
+	COUNT=$(echo "$STDIN" | getLineCount)
 	
 	if (( "$COUNT" < "$1" )); then
 		echo "$STDIN"
@@ -242,14 +291,13 @@ readonly -f ifNumberOfLinesLessThan
 #usage:  echo $data | filter filterVarName
 filter()
 {
-	#grab stdin
-	local STDIN=$(getStdIn)
+	local STDIN VARNAME FILTER RV LIST EACH
+	STDIN=$(getStdIn)
 	debecho filter stdin "$STDIN"
-	local VARNAME="$1"
-	local FILTER=${!VARNAME}
+	VARNAME="$1"
+	FILTER=${!VARNAME}
 	debecho filter filter "$FILTER"
 
-	local RV	
 	IFS=$'\n' read -d '' -r -a LIST <<< "$FILTER"
 	for EACH in "${LIST[@]}"
 	do

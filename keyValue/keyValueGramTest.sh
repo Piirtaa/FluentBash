@@ -41,9 +41,11 @@ _KEY_2_e
 2
 EOF
 
+
 TESTCASE 'declare -A testHash; readKeyValueGram testHash <<< GRAM ; ${testHash[a]} == "" } '
 	[ "$(declare -A testHash; readKeyValueGram testHash <<< "$GRAM" ; echo ${testHash[a]} )" == "" ]
 	RESULT	
+
 
 TESTCASE 'declare -A testHash; readKeyValueGram testHash <<< GRAM ; ${testHash[c]} == "line b" } '
 	[ "$(declare -A testHash; readKeyValueGram testHash <<< "$GRAM" ; echo ${testHash[c]} )" == "line b" ]

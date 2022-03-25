@@ -12,16 +12,20 @@ source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 #usage:  stdin=$(getStdIn)
 getStdIn()
 {
-	local STDIN=""
+	local STDIN
+	
+	#STDIN="$(cat)"
+	
+	STDIN=""
 	if [[ -p /dev/stdin ]]; then
-		#debecho getStdIn stdin exists
+		debecho getStdIn stdin exists
 		STDIN="$(cat -)"
 	else
-		#debecho getStdIn stdin does not exist
+		debecho getStdIn stdin does not exist
 		return 1	
 	fi
 	echo "$STDIN"
-	#debecho getStdIn STDIN="$STDIN"
+	debecho getStdIn STDIN="$STDIN"
 	return 0
 }
 readonly -f getStdIn
@@ -30,6 +34,7 @@ readonly -f getStdIn
 
 fn_exists() 
 {
+	local RES
 	RES=$(type -t "$1") 
 	if [[ "$RES" == function ]] || [[ "$RES" == builtin ]]; then
 		return 0
@@ -42,9 +47,10 @@ readonly -f fn_exists
 #helper function to dynamically execute some stuff 
 makeCall()
 {
-	local STDIN=$(getStdIn)
+	local STDIN COMMAND LIST INPUT RV EACH RESULT CALL
+	STDIN=$(getStdIn)
 	debecho makeCall stdin "$STDIN"
-	local COMMAND="$@"
+	COMMAND="$@"
 	debecho makeCall command "$COMMAND"
 	
 	#split into separate calls if has pipes		
@@ -52,8 +58,7 @@ makeCall()
 		debecho makeCall "$COMMAND" contains pipes.  splitting into separate commands
 		IFS="|" read -r -a LIST <<< "$COMMAND"
 		
-		local INPUT="$STDIN"
-		local RV		
+		INPUT="$STDIN"
 		for EACH in "${LIST[@]}"
 		do
 			debecho makeCall each "$EACH"
@@ -73,9 +78,7 @@ makeCall()
 		debecho makeCall compound result "$INPUT"	
 		return 0
 	else
-		local RESULT
-		local RV
-		local CALL="$1"
+		CALL="$1"
 		debecho makeCall call "$CALL"
 		fn_exists "$CALL" || { debecho makeCall invalid function call "$@" ; return 1 ; }
 	
@@ -99,11 +102,12 @@ readonly -f makeCall
 #usage: echo "$data" | doJob myFunc arg1 arg2 arg3 | doSomethingElseWithOriginalData  
 doJob()
 {
-	local STDIN=$(getStdIn)
+	local STDIN RESULT
+	STDIN=$(getStdIn)
 	#debecho doJob stdin "$STDIN"
 	#debecho doJob cmd "$@"
 	RESULT=$(echo "$STDIN" | makeCall "$@" )	
-	#debecho doJob result "$RESULT"
+	debecho doJob result "$RESULT"
 	echo "$STDIN"
 }
 readonly -f doJob
@@ -113,7 +117,8 @@ readonly -f doJob
 #usage: echo "$data" | doBackgroundJob myFunc arg1 arg2 arg3 | doSomethingElseWithOriginalData  
 doBackgroundJob()
 {
-	local STDIN=$(getStdIn)
+	local STDIN RESULT
+	STDIN=$(getStdIn)
 	#debecho doBackgroundJob stdin "$STDIN"
 	#debecho doBackgroundJob cmd "$@"
 	RESULT=$(echo "$STDIN" | makeCall "$@" & )	
@@ -129,7 +134,8 @@ readonly -f doBackgroundJob
 #usage: pipeTo stdIn functionCall args
 pipeTo()
 {
-	local STDIN="$1"
+	local STDIN
+	STDIN="$1"
 	shift
 	echo "$STDIN" | $@
 }
@@ -138,8 +144,9 @@ readonly -f pipeTo
 
 runAsLastArg()
 {
-	local STDIN=$(getStdIn)
-	local COMMAND="$@"
+	local STDIN COMMAND
+	STDIN=$(getStdIn)
+	COMMAND="$@"
 	echo "$($COMMAND $STDIN)"
 }
 readonly -f runAsLastArg

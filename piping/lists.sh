@@ -18,10 +18,9 @@ loadScript piping/conditionals.sh
 #							getArrayItem 0 ":" #to get first, : delimiter
 getArrayItem()
 {
-	local STDIN=$(getStdIn) 
-	local DELIM=${2:-' '}
-	local ITEM
-	local RV
+	local STDIN DELIM ITEM RV LIST
+	STDIN=$(getStdIn) 
+	DELIM=${2:-' '}
 	
 	if [[ "$STDIN" == *"$DELIM"* ]]; then
 		debecho getArrayItem "$STDIN" contains delim "$DELIM"
@@ -45,10 +44,9 @@ readonly -f getArrayItem
 #  		echo "a b c" | getArrayItemsAsLines 
 getArrayItemsAsLines()
 {
-	local STDIN=$(getStdIn) 
-	local DELIM=${1:-' '}
-	local ITEM
-	local RV
+	local STDIN DELIM ITEM RV LIST EACH
+	STDIN=$(getStdIn) 
+	DELIM=${1:-' '}
 	
 	if [[ "$STDIN" == *"$DELIM"* ]]; then
 		debecho getArrayItemsAsLines "$STDIN" contains delim "$DELIM"
@@ -75,7 +73,8 @@ readonly -f getArrayItemsAsLines
 #							getFirstArrayItem :	#to get next, : delimiter
 getFirstArrayItem()
 {
-	local STDIN=$(getStdIn) 
+	local STDIN
+	STDIN=$(getStdIn) 
 	echo $STDIN | getArrayItem 0 "$1"
 }
 readonly -f getFirstArrayItem
@@ -85,17 +84,18 @@ readonly -f getFirstArrayItem
 #							getFirstArrayItem :	#to get next, : delimiter
 getFirstArrayItemRemainder()
 {
-	local STDIN=$(getStdIn) 
-	local ITEM=$(echo "$STDIN" | getFirstArrayItem "$1")
+	local STDIN ITEM ITEMLEN DELIMLEN LEN REM RV
+	STDIN=$(getStdIn) 
+	ITEM=$(echo "$STDIN" | getFirstArrayItem "$1")
 	debecho getFirstArrayItemRemainder item "$ITEM"
-	local ITEMLEN=$(echo "$ITEM" | getLength)
-	local DELIMLEN=$(echo "$1" | getLength)
-	local LEN=$((ITEMLEN + DELIMLEN))
+	ITEMLEN=$(echo "$ITEM" | getLength)
+	DELIMLEN=$(echo "$1" | getLength)
+	LEN=$((ITEMLEN + DELIMLEN))
 	debecho getFirstArrayItemRemainder len "$LEN"
-	local REM=$(echo "$STDIN" | getSubstring "$LEN")
+	REM=$(echo "$STDIN" | getSubstring "$LEN")
 	debecho getFirstArrayItemRemainder remainder "$REM"
 	
-	local RV=$?
+	RV=$?
 	echo "$REM"
 	return "$RV"
 }
@@ -106,14 +106,12 @@ readonly -f getFirstArrayItemRemainder
 #usage:  echo "a:b c:d e f" | doEach : echo 
 doEach()
 {
-	local STDIN=$(getStdIn) 
+	local STDIN DELIM ITEM RV LIST EACH 
+	STDIN=$(getStdIn) 
 	debecho doEach stdin "$STDIN"
-	local DELIM=${1:-' '}
+	DELIM=${1:-' '}
 	debecho doEach delim "$DELIM"
-			
 	shift
-	local ITEM
-	local RV
 	
 	if [[ "$STDIN" == *"$DELIM"* ]]; then
 		debecho doEach "$STDIN" contains delim "$DELIM"
@@ -140,7 +138,8 @@ readonly -f doEach
 #usage:  echo $manylines | doEachLine echo 
 doEachLine()
 {
-	local STDIN=$(getStdIn) 
+	local STDIN LIST EACH
+	STDIN=$(getStdIn) 
 
 	IFS=$'\n' read -d '' -r -a LIST <<< "$STDIN"
 	
@@ -161,9 +160,10 @@ readonly -f doEachLine
 #usage:  echo something | doEach , appendToFile fileName
 appendToFile()
 {
-	local STDIN=$(getStdIn)
+	local STDIN FILE
+	STDIN=$(getStdIn)
 	debecho appendToFile stdin "$STDIN"
-	local FILE="$1"
+	FILE="$1"
 	debecho appendToFile file "$FILE"
 
 	$(echo "$STDIN"  >> "$FILE" )  
@@ -176,13 +176,14 @@ readonly -f appendToFile
 #usage:  echo mylist | sideJoinLists myotherlistVarName joinString 
 sideJoinLists()
 {
-	local STDIN=$(getStdIn)
-	local VARNAME="$1"
-	local LIST2=${!VARNAME}
-	local JOINER="$2"
+	local STDIN VARNAME LIST2 JOINER LEN ARR1 ARR2 ITEM1 ITEM2
+	STDIN=$(getStdIn)
+	VARNAME="$1"
+	LIST2=${!VARNAME}
+	JOINER="$2"
 	
 	#ensure they are the same length
-	local LEN=$(echo "$STDIN" | getLineCount)
+	LEN=$(echo "$STDIN" | getLineCount)
 	echo "$LIST2" | getLineCount | ifEquals "$LEN" > /dev/null || return 1
 	
 	#convert both lists to arrays
@@ -199,4 +200,4 @@ sideJoinLists()
  	return 0
 }
 readonly -f sideJoinLists
-debugFlagOn sideJoinLists
+#debugFlagOn sideJoinLists

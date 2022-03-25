@@ -16,15 +16,16 @@ loadScript piping/conditionals.sh
 #usage:  getKeyValueGram hashName
 getKeyValueGram()
 {
+	local EACH VAL LEN
 	local -n MYHASH=$1 #uses nameref bash 4.3+
 	for EACH in "${!MYHASH[@]}"; do
-		local VAL="${MYHASH[$EACH]}"
+		VAL="${MYHASH[$EACH]}"
 		
 		#note:  we put the length first because it facilitates faster filtering of the raw datagram
 		if [[ -z "$VAL" ]]; then
 			echo "_KEY_0_""$EACH"
 		else
-			local LEN=$(echo "$VAL" | getLineCount)		
+			LEN=$(echo "$VAL" | getLineCount)		
 			echo "_KEY_""$LEN""_""$EACH"
 			echo "$VAL"
 		fi	
@@ -37,12 +38,13 @@ readonly -f getKeyValueGram
 #usage:  declare -A HASH ; readKeyValueGram HASH <<< "$GRAM".  does not work with piped input
 readKeyValueGram()
 {
+	local STDIN
 	if [[ -z "$1" ]]; then
 		debecho readKeyValueGram no array provided
 		return 1	
 	fi
 
-	local STDIN=$(getStdIn) 
+	STDIN=$(getStdIn) 
 	debecho readKeyValueGram stdin "$STDIN"
 
 	local -n RETURNHASH=$1 #uses nameref bash 4.3+
@@ -55,20 +57,20 @@ readKeyValueGram()
 	LEN=$(echo "$STDIN" | getLineCount)
 	debecho readKeyValueGram len "$LEN"
 	
-	local ARR	
+	local ARR I LINE COUNT_KEY COUNT KEY VAL J
 	IFS=$'\n' read -d '' -r -a ARR <<< "$STDIN"
 	#iterate over each line
-	for ((i = 0 ; i < "$LEN" ; i++)); do
-		local LINE="${ARR[$i]}"
+	for ((I = 0 ; I < "$LEN" ; I++)); do
+		LINE="${ARR[$I]}"
 		debecho readKeyValueGram line "$LINE"
 	
 		#keys have the form "_KEY_numberOfLines_key"
-		local COUNT_KEY=$(echo "$LINE" | ifStartsWith "_KEY_" | getAfter "_KEY_" )
+		COUNT_KEY=$(echo "$LINE" | ifStartsWith "_KEY_" | getAfter "_KEY_" )
 		debecho readKeyValueGram countkey "$COUNT_KEY"
 		
 		if [[ ! -z "$COUNT_KEY" ]]; then
-			local COUNT=$(echo "$COUNT_KEY" | getBefore "_" )
-			local KEY=$(echo "$COUNT_KEY" | getAfter "_" )
+			COUNT=$(echo "$COUNT_KEY" | getBefore "_" )
+			KEY=$(echo "$COUNT_KEY" | getAfter "_" )
 			debecho readKeyValueGram count "$COUNT"
 			debecho readKeyValueGram key "$KEY"
 			
@@ -77,12 +79,12 @@ readKeyValueGram()
 				RETURNHASH["$KEY"]=""				
 			else
 				#start reading value at next line
-				i=$((i + 1))
-				local VAL="${ARR[$i]}"
+				I=$((I + 1))
+				VAL="${ARR[$I]}"
 				COUNT=$((COUNT - 1))
-				for ((j=0; j < "$COUNT" ; j++)); do
-					i=$((i + 1))
-					VAL=$(echo "$VAL" | appendLine "${ARR[$i]}" )
+				for ((J=0; J < "$COUNT" ; J++)); do
+					I=$((I + 1))
+					VAL=$(echo "$VAL" | appendLine "${ARR[$I]}" )
 				done	
 				debecho readKeyValueGram key "$KEY" val "$VAL"  
 				RETURNHASH["$KEY"]="$VAL"		
@@ -98,6 +100,7 @@ readonly -f readKeyValueGram
 #usage:  dumpHash varName
 dumpHash()
 {
+	local K
 	local -n MYHASH=$1 #uses nameref bash 4.3+
 	for K in "${!MYHASH[@]}"; do echo $K --- ${MYHASH[$K]}; done
 }
@@ -109,22 +112,23 @@ readonly -f dumpHash
 #usage: echo $GRAM | kvgSet key value
 kvgSet()
 {
-	local KEY="$1"	
+	local KEY VAL GRAM ORIGVAL 
+	KEY="$1"	
 	if [[ -z "$KEY" ]]; then
 		debecho kvgSet no key provided
 		return 1	
 	fi
-	local VAL="${@:2}"
+	VAL="${@:2}"
 	
 	#debecho kvgSet key "$KEY"
 	#debecho kvgSet val "$VAL"
 			
 	#convert the gram into a hash
-	local GRAM=$(getStdIn)
+	GRAM=$(getStdIn)
 	#debecho kvgSet gram "$GRAM"
 	
 	#get the initial value
-	local ORIGVAL=$(echo "$GRAM" | kvgGet "$KEY" )	
+	ORIGVAL=$(echo "$GRAM" | kvgGet "$KEY" )	
 	
 	if [[ "$VAL" != "$ORIGVAL" ]]; then
 		local -A HASH
@@ -158,7 +162,8 @@ readonly -f kvgSet
 #usage: echo $GRAM | kvgGet key
 kvgGet()
 {
-	local KEY="$1"	
+	local KEY
+	KEY="$1"	
 	if [[ -z "$KEY" ]]; then
 		debecho kvgGet no key provided
 		return 1	
@@ -205,9 +210,9 @@ readonly -f kvgGet
 #usage: echo $GRAM | kvgGetAllKeys 
 kvgGetAllKeys()
 {
+	local GRAM LINES RV 
 	#convert the gram into a hash
-	local GRAM=$(getStdIn)
-	local LINES
+	GRAM=$(getStdIn)
 	LINES=$(echo "$GRAM" | grep "^_KEY_")
 	LINES=$(echo "$LINES" | doEachLine getAfter "_KEY" | doEachLine getAfter "_" | doEachLine getAfter "_" )
 	RV=$?

@@ -40,7 +40,7 @@ extractURLS()
 }
 #debugFlagOn extractURLS
 
-#reads stdin as lines and then iterates and echoes lines that aren't contained by other lines
+#reads stdin as lines and then iterates and echoes lines that aren't contained by other lines. input has to be presorted
 #usage:  echo $manylines | filterOutIfNextLineContains
 filterOutIfNextLineContains()
 {
