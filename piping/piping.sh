@@ -5,31 +5,28 @@
 #warning when chaining pipes together.  they are each kicked off in parallel but wait for input from the piping process.  
 
 #load loader first.  
-[ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source $BASH_DIR/../core/core.sh #first thing we load is the script loader
+[ -z ${BASH_DIR} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+. $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #returns standard in
 #usage:  stdin=$(getStdIn)
 getStdIn()
 {
 	local STDIN
-	
-	#STDIN="$(cat)"
-	
 	STDIN=""
 	if [[ -p /dev/stdin ]]; then
-		debecho getStdIn stdin exists
+		#debecho getStdIn stdin exists
 		STDIN="$(cat -)"
 	else
-		debecho getStdIn stdin does not exist
+		#debecho getStdIn stdin does not exist
 		return 1	
 	fi
 	echo "$STDIN"
-	debecho getStdIn STDIN="$STDIN"
+	#debecho getStdIn STDIN="$STDIN"
 	return 0
 }
-readonly -f getStdIn
-#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+#readonly -f getStdIn
+#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 #debugFlagOn getStdIn
 
 fn_exists() 
@@ -42,32 +39,33 @@ fn_exists()
 		return 1
 	fi
 }
-readonly -f fn_exists
+#readonly -f fn_exists
 
 #helper function to dynamically execute some stuff 
 makeCall()
 {
 	local STDIN COMMAND LIST INPUT RV EACH RESULT CALL
 	STDIN=$(getStdIn)
-	debecho makeCall stdin "$STDIN"
+	#debecho makeCall stdin "$STDIN"
 	COMMAND="$@"
-	debecho makeCall command "$COMMAND"
+	#debecho makeCall command "$COMMAND"
 	
 	#split into separate calls if has pipes		
 	if [[ "$COMMAND" == *"|"* ]]; then
-		debecho makeCall "$COMMAND" contains pipes.  splitting into separate commands
+		#debecho makeCall "$COMMAND" contains pipes.  splitting into separate commands
 		IFS="|" read -r -a LIST <<< "$COMMAND"
 		
 		INPUT="$STDIN"
 		for EACH in "${LIST[@]}"
 		do
-			debecho makeCall each "$EACH"
+			#debecho makeCall each "$EACH"
 			#recurse
 			#note we do not quote each.  since we have already split, chained calls into makeCall do not have quote protection
-			INPUT=$(echo "$INPUT" | makeCall $EACH ) 
+			#INPUT=$(echo "$INPUT" | makeCall $EACH ) 
+			INPUT=$(makeCall $EACH <<< "$INPUT") 
 			RV=$?
-			debecho makeCall rv "$RV"
-			debecho makeCall result "$INPUT"
+			#debecho makeCall rv "$RV"
+			#debecho makeCall result "$INPUT"
 			
 			if [[ "$RV" != 0 ]] ; then
 				return 1
@@ -75,17 +73,18 @@ makeCall()
 		done
 		
 		echo "$INPUT"	
-		debecho makeCall compound result "$INPUT"	
+		#debecho makeCall compound result "$INPUT"	
 		return 0
 	else
 		CALL="$1"
-		debecho makeCall call "$CALL"
+		#debecho makeCall call "$CALL"
 		fn_exists "$CALL" || { debecho makeCall invalid function call "$@" ; return 1 ; }
 	
-		RESULT=$(echo "$STDIN" | "$@" )	
+		#RESULT=$(echo "$STDIN" | "$@" )	
+		RESULT=$("$@" <<< "$STDIN")	
 		RV=$?
-		debecho makeCall rv "$RV"
-		debecho makeCall result "$RESULT"
+		#debecho makeCall rv "$RV"
+		#debecho makeCall result "$RESULT"
 	
 		if [[ "$RV" == 0 ]] ; then
 			echo "$RESULT"
@@ -95,7 +94,7 @@ makeCall()
 		fi
 	fi
 }
-readonly -f makeCall
+#readonly -f makeCall
 #debugFlagOn makeCall
 
 #sends stdin to the function passed in the args, and then echoes stdin.  
@@ -106,11 +105,12 @@ doJob()
 	STDIN=$(getStdIn)
 	#debecho doJob stdin "$STDIN"
 	#debecho doJob cmd "$@"
-	RESULT=$(echo "$STDIN" | makeCall "$@" )	
-	debecho doJob result "$RESULT"
+	#RESULT=$(echo "$STDIN" | makeCall "$@" )	
+	RESULT=$(makeCall "$@" <<< "$STDIN")	
+	#debecho doJob result "$RESULT"
 	echo "$STDIN"
 }
-readonly -f doJob
+#readonly -f doJob
 #debugFlagOn doJob
 
 #sends stdin to the function passed in the args, and then echoes stdin.  
@@ -125,7 +125,7 @@ doBackgroundJob()
 	#debecho doBackgroundJob result "$RESULT"
 	echo "$STDIN"
 }
-readonly -f doBackgroundJob
+#readonly -f doBackgroundJob
 #debugFlagOn doBackgroundJob
 
 
@@ -139,7 +139,7 @@ pipeTo()
 	shift
 	echo "$STDIN" | $@
 }
-readonly -f pipeTo
+#readonly -f pipeTo
 #debugFlagOn pipeTo
 
 runAsLastArg()
@@ -149,5 +149,5 @@ runAsLastArg()
 	COMMAND="$@"
 	echo "$($COMMAND $STDIN)"
 }
-readonly -f runAsLastArg
+#readonly -f runAsLastArg
 #debugFlagOn runAsLastArg

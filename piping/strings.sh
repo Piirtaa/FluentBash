@@ -3,8 +3,8 @@
 #tags: strings, string manipulation
 
 #load loader first.  
-[ -z ${BASH_DIR+x} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source $BASH_DIR/../core/core.sh #first thing we load is the script loader
+[ -z ${BASH_DIR} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+. $BASH_DIR/../core/core.sh #first thing we load is the script loader
 
 #load dependencies.  
 loadScript piping/piping.sh
@@ -24,7 +24,7 @@ getLength()
 	fi	
 	return 0
 }
-readonly -f getLength
+#readonly -f getLength
 #debugFlagOn getLength
 
 #usage:  echo abc | getSubString startPos length
@@ -44,18 +44,16 @@ getSubstring()
 		fi
 	fi	
 }
-readonly -f getSubstring
+#readonly -f getSubstring
 #debugFlagOn getSubstring
 
 #usage: echo abcdef | getIndexOf cd
 getIndexOf()
 {
-	local STDIN SEARCH LEN POS STRING RV
-
+	local STDIN SEARCH POS STRING RV
 	STDIN=$(getStdIn)
 	SEARCH="$1"
-	LEN="${#STDIN}"
-       
+	   
 	# strip the first substring and everything beyond
 	STRING="${STDIN%%"$SEARCH"*}"
 	RV=$?
@@ -76,7 +74,9 @@ getBefore()
 	local STDIN SEARCH POS RV
 	STDIN=$(getStdIn)
 	SEARCH="$1"
-	POS=$(echo "$STDIN" | getIndexOf "$SEARCH")
+	#POS=$(echo "$STDIN" | getIndexOf "$SEARCH" )
+	POS=$(getIndexOf "$SEARCH" <<< "$STDIN")
+	
 	RV=$?
 	if [[ "$RV" == 0 ]]; then
 		echo "${STDIN:0:$POS}"
@@ -88,7 +88,7 @@ getBefore()
 	#local MATCH="${STDIN%$SEARCH*}"
 	#echo "$MATCH"
 }
-readonly -f getBefore
+#readonly -f getBefore
 #debugFlagOn getBefore
 
 #usage: echo abcdef | getAfter cd
@@ -97,7 +97,9 @@ getAfter()
 	local STDIN SEARCH POS RV LEN
 	STDIN=$(getStdIn)
 	SEARCH="$1"
-	POS=$(echo "$STDIN" | getIndexOf "$SEARCH")
+	#POS=$(echo "$STDIN" | getIndexOf "$SEARCH")
+	POS=$(getIndexOf "$SEARCH" <<< "$STDIN")
+	
 	RV=$?
 	if [[ "$RV" == 0 ]]; then
 		LEN="${#SEARCH}"
@@ -112,17 +114,19 @@ getAfter()
 	#local MATCH=${STDIN#*$SEARCH}
 	#echo "$MATCH"
 }
-readonly -f getAfter
+#readonly -f getAfter
 #debugFlagOn getAfter
 
 getLineCount()
 {
 	local STDIN LINECOUNT
 	STDIN=$(getStdIn)
-	LINECOUNT=$(echo "$STDIN" | wc -l)
+	#LINECOUNT=$(echo "$STDIN" |  wc -l )
+	LINECOUNT=$(wc -l <<< "$STDIN")
+	
 	echo "$LINECOUNT"
 }
-readonly -f getLineCount
+#readonly -f getLineCount
 #debugFlagOn getLineCount
  
 #usage echo $RESULT | getLine 1
@@ -130,17 +134,21 @@ getLine()
 {
 	local STDIN LINECOUNT LINE
 	STDIN=$(getStdIn)
-	debecho getLine stdin "$STDIN"
-	debecho getLine line number "$1"
+	#debecho getLine stdin "$STDIN"
+	#debecho getLine line number "$1"
 	
-	LINECOUNT=$(echo "$STDIN" | getLineCount)
+	#LINECOUNT=$(echo "$STDIN" | getLineCount )
+	LINECOUNT=$(getLineCount <<< "$STDIN")
+	
 	if (( "$1" <= "$LINECOUNT" )); then
-		LINE=$(echo "$STDIN" | head -n "$1" | tail -1)
-		debecho getLine line "$LINE"
+		#LINE=$(echo "$STDIN" | head -n "$1" | tail -1 )
+		LINE=$(tail -1 < <(head -n "$1" <<< "$STDIN"))
+		
+		#debecho getLine line "$LINE"
 		echo "$LINE"
 	fi
 }
-readonly -f getLine
+#readonly -f getLine
 #debugFlagOn getLine
 
 
@@ -149,11 +157,13 @@ getLinesBelow()
 {
 	local STDIN POS
 	STDIN=$(getStdIn)
-	declare -i POS; POS="$1" ; ((POS+=1))
-	debecho getLinesBelow pos "$POS"
-	echo "$STDIN" | tail -n +"$POS" 
+	typeset -i POS; POS="$1" ; ((POS+=1))
+	#debecho getLinesBelow pos "$POS"
+	#echo "$STDIN" | tail -n +"$POS" 
+	tail -n +"$POS" <<< "$STDIN"
+
 }
-readonly -f getLinesBelow
+#readonly -f getLinesBelow
 #debugFlagOn getLinesBelow
 
 #usage echo $RESULT | getLinesAbove 3
@@ -161,11 +171,13 @@ getLinesAbove()
 {
 	local STDIN POST
 	STDIN=$(getStdIn)
-	declare -i POS; POS="$1" ; ((POS-=1))
-	debecho getLinesAbove pos "$POS"
-	echo "$STDIN" | head -n +"$POS" 
+	typeset -i POS; POS="$1" ; ((POS-=1))
+	#debecho getLinesAbove pos "$POS"
+	#echo "$STDIN" | head -n +"$POS" 
+	head -n +"$POS" <<< "$STDIN"
+
 }
-readonly -f getLinesAbove
+#readonly -f getLinesAbove
 #debugFlagOn getLinesAbove
 
 #usage:  echo something | prepend prefix
@@ -175,7 +187,7 @@ prepend()
 	STDIN=$(getStdIn)
 	echo "$@$STDIN" 
 }
-readonly -f prepend
+#readonly -f prepend
 #debugFlagOn prepend
 
 #usage:  echo something | append suffix
@@ -185,7 +197,7 @@ append()
 	STDIN=$(getStdIn)
 	echo "$STDIN$@" 
 }
-readonly -f append
+#readonly -f append
 #debugFlagOn append
 
 #usage:  echo something | prependLine topline
@@ -200,7 +212,7 @@ prependLine()
 		echo "$STDIN" 
 	fi
 }
-readonly -f prependLine
+#readonly -f prependLine
 #debugFlagOn prependLine
 
 #usage:  echo something | appendLine bottomline
@@ -208,20 +220,20 @@ appendLine()
 {
 	local STDIN OUTPUT
 	STDIN=$(getStdIn)
-	debecho appendLine stdin "$STDIN"
+	#debecho appendLine stdin "$STDIN"
 	
 	OUTPUT="$STDIN"
-	debecho appendLine appending "$@"
+	#debecho appendLine appending "$@"
 	if [[ -z "$OUTPUT" ]]; then
 		OUTPUT="$@"
 	else
 		OUTPUT=$(echo "$OUTPUT"; echo "$@")		
 	fi
 	
-	debecho appendLine output "$OUTPUT"
+	#debecho appendLine output "$OUTPUT"
 	echo "$OUTPUT"
 }
-readonly -f appendLine
+#readonly -f appendLine
 #debugFlagOn appendLine
 
 
@@ -231,17 +243,20 @@ replaceLine()
 {
 	local STDIN LINENUMBER ABOVE BELOW NEWLINE
 	STDIN=$(getStdIn)
-	debecho replaceLine stdin "$STDIN"
+	#debecho replaceLine stdin "$STDIN"
 	LINENUMBER="$1"
-	debecho replaceLine linenumber "$LINENUMBER"
+	#debecho replaceLine linenumber "$LINENUMBER"
 	shift
 	
-	ABOVE=$(echo "$STDIN" | getLinesAbove "$LINENUMBER" )
-	debecho replaceLine above "$ABOVE"
-	BELOW=$(echo "$STDIN" | getLinesBelow "$LINENUMBER" )
-	debecho replaceLine below "$BELOW"	
+	
+	#ABOVE=$(echo "$STDIN" | getLinesAbove "$LINENUMBER" )
+	ABOVE=$(getLinesAbove "$LINENUMBER" <<< "$STDIN")
+	#debecho replaceLine above "$ABOVE"
+	#BELOW=$(echo "$STDIN" | getLinesBelow "$LINENUMBER" )
+	BELOW=$(getLinesBelow "$LINENUMBER" <<< "$STDIN") 
+	#debecho replaceLine below "$BELOW"	
 	NEWLINE=$(echo "$@")
-	debecho replaceLine newline "$NEWLINE"
+	#debecho replaceLine newline "$NEWLINE"
 	
 	if [[ ! -z "$ABOVE" ]]; then
 		echo "$ABOVE"
@@ -251,7 +266,7 @@ replaceLine()
 		echo "$BELOW"
 	fi
 }
-readonly -f replaceLine
+#readonly -f replaceLine
 #debugFlagOn replaceLine
 
 #usage:  echo something | insertLine 2 newline
@@ -259,31 +274,34 @@ insertLine()
 {
 	local STDIN LINENUMBER ABOVE BELOW OUTPUT
 	STDIN=$(getStdIn)
-	debecho insertLine stdin "$STDIN"
+	#debecho insertLine stdin "$STDIN"
 	LINENUMBER="$1"
-	debecho insertLine linenumber "$LINENUMBER"
+	#debecho insertLine linenumber "$LINENUMBER"
 	shift
 	
-	ABOVE=$(echo "$STDIN" | getLinesAbove "$LINENUMBER" )
-	debecho insertLine above "$ABOVE"
-	BELOW=$(echo "$STDIN" | getLinesBelow $((LINENUMBER -1)) )
-	debecho insertLine below "$BELOW"
+	#ABOVE=$(echo "$STDIN" | getLinesAbove "$LINENUMBER" )
+	ABOVE=$(getLinesAbove "$LINENUMBER" <<< "$STDIN")
+	#debecho insertLine above "$ABOVE"
+	#BELOW=$(echo "$STDIN" | getLinesBelow $((LINENUMBER -1)) )
+	BELOW=$(getLinesBelow $((LINENUMBER -1)) <<< "$STDIN")
+	#debecho insertLine below "$BELOW"
 	
 	OUTPUT="$ABOVE"
 	
 	if [[ -z "$OUTPUT" ]]; then
 		OUTPUT="$@"
 	else
-		OUTPUT=$(echo "$OUTPUT" | appendLine "$@")
+		#OUTPUT=$(echo "$OUTPUT" | appendLine "$@")
+		OUTPUT=$(appendLine "$@" <<< "$OUTPUT")
 	fi
 	if [[ ! -z "$BELOW" ]]; then
-		OUTPUT=$(echo "$OUTPUT" | appendLine "$BELOW")
+		#OUTPUT=$(echo "$OUTPUT" | appendLine "$BELOW")
+		OUTPUT=$(appendLine "$BELOW" <<< "$OUTPUT")
 	fi
-	debecho insertLine output "$OUTPUT"
+	#debecho insertLine output "$OUTPUT"
 	echo "$OUTPUT"
-	
 }
-readonly -f insertLine
+#readonly -f insertLine
 #debugFlagOn insertLine
 
 #usage: echo something | removeLine 2
@@ -294,10 +312,12 @@ removeLine()
 	LINENUMBER="$1"
 	shift
 	
-	ABOVE=$(echo "$STDIN" | getLinesAbove $((LINENUMBER )) )
-	debecho removeLine above "$ABOVE"
-	BELOW=$(echo "$STDIN" | getLinesBelow $((LINENUMBER)) )
-	debecho removeLine below "$BELOW"
+	#ABOVE=$(echo "$STDIN" | getLinesAbove $((LINENUMBER )) )
+	ABOVE=$(getLinesAbove $((LINENUMBER )) <<< "$STDIN") 
+	#debecho removeLine above "$ABOVE"
+	#BELOW=$(echo "$STDIN" | getLinesBelow $((LINENUMBER)) )
+	BELOW=$(getLinesBelow $((LINENUMBER)) <<< "$STDIN") 
+	#debecho removeLine below "$BELOW"
 	
 	if [[ ! -z "$ABOVE" ]]; then
 		echo "$ABOVE"
@@ -306,7 +326,7 @@ removeLine()
 		echo "$BELOW"
 	fi
 }
-readonly -f removeLine
+#readonly -f removeLine
 #debugFlagOn removeLine
 
 #usage:  echo something | prependOnLine 1 prefix
@@ -314,16 +334,18 @@ prependOnLine()
 {
 	local STDIN LINENUMBER NEWLINE
 	STDIN=$(getStdIn)
-	debecho prependOnLine stdin "$STDIN"
+	#debecho prependOnLine stdin "$STDIN"
 	LINENUMBER="$1"
-	debecho prependOnLine linenumber "$LINENUMBER"
+	#debecho prependOnLine linenumber "$LINENUMBER"
 	shift
 	
-	NEWLINE="$@"$(echo "$STDIN" | getLine "$LINENUMBER" )
-	debecho prependOnLine newline "$NEWLINE"
-	echo "$STDIN" | replaceLine "$LINENUMBER" "$NEWLINE"	
+	#NEWLINE="$@"$(echo "$STDIN" | getLine "$LINENUMBER" )
+	NEWLINE="$@"$(getLine "$LINENUMBER" <<< "$STDIN")
+	#debecho prependOnLine newline "$NEWLINE"
+	#echo "$STDIN" | replaceLine "$LINENUMBER" "$NEWLINE"	
+	replaceLine "$LINENUMBER" "$NEWLINE" <<< "$STDIN"	
 }
-readonly -f prependOnLine
+#readonly -f prependOnLine
 #debugFlagOn prependOnLine
 
 #usage:  echo something | appendOnLine 1 suffix
@@ -331,16 +353,18 @@ appendOnLine()
 {
 	local STDIN LINENUMBER NEWLINE
 	STDIN=$(getStdIn)
-	debecho appendOnLine stdin "$STDIN"
+	#debecho appendOnLine stdin "$STDIN"
 	LINENUMBER="$1"
-	debecho appendOnLine linenumber "$LINENUMBER"
+	#debecho appendOnLine linenumber "$LINENUMBER"
 	shift
 	
-	NEWLINE=$(echo "$STDIN" | getLine "$LINENUMBER" )"$@"
-	debecho appendOnLine newline "$NEWLINE"
-	echo "$STDIN" | replaceLine "$LINENUMBER" "$NEWLINE"	
+	#NEWLINE=$(echo "$STDIN" | getLine "$LINENUMBER" )"$@"
+	NEWLINE=$(getLine "$LINENUMBER" <<< "$STDIN")"$@"
+	#debecho appendOnLine newline "$NEWLINE"
+	#echo "$STDIN" | replaceLine "$LINENUMBER" "$NEWLINE"	
+	replaceLine "$LINENUMBER" "$NEWLINE" <<< "$STDIN"	
 }
-readonly -f appendOnLine
+#readonly -f appendOnLine
 #debugFlagOn appendOnLine
 
 #is a fluent cat
@@ -351,4 +375,4 @@ dump()
 	STDIN=$(getStdIn)
 	cat "$STDIN"
 }
-readonly -f dump
+#readonly -f dump

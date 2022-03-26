@@ -9,7 +9,7 @@
 {
 	export LC_ALL=C #to speed stuff up by not using any unicode
 	
-	declare -r IS_CORE_LOADED=true
+	typeset -r IS_CORE_LOADED=true
 
 	#set BASH_DIR.  this will clobber prior values.  all scripts are then loaded relative to the scriptloader
 	BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -19,23 +19,23 @@
 	#DEBUGGING STUFF
 	
 	#hash of debug flags
-	declare -gA DEBUG_FLAGS;
+	typeset -A DEBUG_FLAGS;
 	
 	#enables a debug flag.  when enabled and passed to debecho (as first arg), the message is written
 	debugFlagOn()
 	{
 		DEBUG_FLAGS["$1"]=true
 	}
-	readonly -f debugFlagOn
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f debugFlagOn
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#disables a debug flag.  when disabled the message is not written
 	debugFlagOff()
 	{
 		DEBUG_FLAGS["$1"]=false
 	}
-	readonly -f debugFlagOff
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f debugFlagOff
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#tests whether a debug flag has been set.  returns true only if explicitly set on
 	isDebugFlagOn()
@@ -51,8 +51,8 @@
 		
 		return 1
 	}
-	readonly -f isDebugFlagOn
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f isDebugFlagOn
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#write a debug entry if the flag exists
 	#usage: debecho flagName text to write out
@@ -69,8 +69,8 @@
 																												#						         ^^^ to stderr
 	  	return 0	  	
 	}
-	readonly -f debecho 
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f debecho 
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#dumps contents of specified directory
 	dumpDirContents()
@@ -82,8 +82,8 @@
 	    	echo 
 		done
 	}
-	readonly -f dumpDirContents
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f dumpDirContents
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	#debugFlagOn dumpDirContents	
 	
 	waitForKeyPress()
@@ -98,7 +98,7 @@
 			fi
 		done	
 	}
-	readonly -f waitForKeyPress
+	#readonly -f waitForKeyPress
 	
 	#generates random alpha numeric of given length (defaults to 5)
 	#usage:  genID length
@@ -108,12 +108,12 @@
 		LENGTH="${1:-5}"
 		cat /dev/urandom | env LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w "$LENGTH" | head -n 1	
 	}
-	readonly -f genID
+	#readonly -f genID
 	
 	#SCRIPT LOADER
 
 	#hash of debug flags
-	declare -gA LOADED_SCRIPTS;
+	typeset -A LOADED_SCRIPTS;
 	
 	#mark the current script as loaded
 	LOADED_SCRIPTS["core/core.sh"]=$(date +"%y%m%d%H%M%S")
@@ -125,7 +125,7 @@
 			debecho loadScript loading "$1"
 			#load it		
 			LOADED_SCRIPTS["$1"]=$(date +"%y%m%d%H%M%S")
-			source "$BASH_DIR"'/../'"$1"
+			. "$BASH_DIR"'/../'"$1"
 
 			debecho loadScript loaded "$1"
 			
@@ -136,8 +136,8 @@
 		debecho loadScript already loaded "$1"
 		return 1
 	}
-	readonly -f loadScript
-	#        ^^^ -f declare functions readonly to prevent overwriting and notify of duplicate lib calls
+	#readonly -f loadScript
+	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	#debugFlagOn loadScript	
 }
 	
