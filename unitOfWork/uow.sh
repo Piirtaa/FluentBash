@@ -305,10 +305,7 @@ workSetFunction()
 	fi
 
 	#test if the fnName is a function
-	if [[ $(type -t "$FNNAME") != function ]]; then
-		debecho workSetFunction not a function "$FNNAME"
-		return 1
-	fi
+	isUserDefinedFunction "$FNNAME" ||	debecho workSetFunction not a function "$FNNAME" ; return 1 ;
 	
 	local GRAM=$(getStdIn)
 	debecho workSetFunction gram "$GRAM"

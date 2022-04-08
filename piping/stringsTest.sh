@@ -177,4 +177,5 @@ TESTCASE 'abcABCdefABC | getBefore abc == '
 TESTCASE 'abcABCdefABC | getAfter abc == ABCdefABC'
 	[ "$(echo "abcABCdefABC" | getAfter abc)" == "ABCdefABC" ]
 	RESULT	
+
 	

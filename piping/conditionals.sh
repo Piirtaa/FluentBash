@@ -32,7 +32,7 @@ ifContains()
 		fi
 	fi	
 }
-#readonly -f ifContains
+readonly -f ifContains
 #debugFlagOn ifContains
 
 ifNotContains()
@@ -52,7 +52,7 @@ ifNotContains()
 		fi
 	fi	
 }
-#readonly -f ifNotContains
+readonly -f ifNotContains
 #debugFlagOn ifNotContains
 
 #echoes pipe to stdout if stdin contains each arg
@@ -73,7 +73,7 @@ ifContainsAll()
 		return 0
 	fi	
 }
-#readonly -f ifContainsAll
+readonly -f ifContainsAll
 #debugFlagOn ifContainsAll
 
 ifContainsNone()
@@ -92,7 +92,7 @@ ifContainsNone()
 		return 0
 	fi	
 }
-#readonly -f ifContainsNone
+readonly -f ifContainsNone
 #debugFlagOn ifContainsNone
 
 #echoes pipe to stdout if stdin equals $1
@@ -112,7 +112,7 @@ ifEquals()
 		fi
 	fi	
 }
-#readonly -f ifEquals
+readonly -f ifEquals
 #debugFlagOn ifEquals
 
 #echoes pipe to stdout if stdin not equals $1
@@ -132,7 +132,7 @@ ifNotEquals()
 		fi
 	fi	
 }
-#readonly -f ifNotEquals
+readonly -f ifNotEquals
 #debugFlagOn ifNotEquals
 
 #echoes pipe to stdout if stdin equals $1
@@ -142,8 +142,8 @@ ifLengthOf()
 	local STDIN LEN
 	STDIN=$(getStdIn)
 	#LEN=$(echo "$STDIN" | getLength)
-	#LEN=$(getLength < <(echo "$STDIN"))
-	LEN=$(getLength <<< "$STDIN")
+	LEN=$(getLength < <(echo "$STDIN"))
+	#LEN=$(getLength <<< "$STDIN")
 	
 	if [[ "$LEN" == "$1" ]]; then
 		echo "$STDIN"
@@ -151,7 +151,7 @@ ifLengthOf()
 	fi
 	return 1
 }
-#readonly -f ifLengthOf
+readonly -f ifLengthOf
 #debugFlagOn ifLengthOf
 
 #usage:  echo abc | ifStartsWith ab | ...will echo abc
@@ -174,7 +174,7 @@ ifStartsWith()
 		fi
 	fi	
 }
-#readonly -f ifStartsWith
+readonly -f ifStartsWith
 #debugFlagOn ifStartsWith
 
 #usage:  echo abc | ifNotStartsWith cd | ...will echo abc
@@ -197,7 +197,7 @@ ifNotStartsWith()
 		fi
 	fi	
 }
-#readonly -f ifNotStartsWith
+readonly -f ifNotStartsWith
 #debugFlagOn ifNotStartsWith
 
 #usage:  echo abc | ifEndsWith abc | ...will echo abc
@@ -216,7 +216,7 @@ ifEndsWith()
 		fi
 	fi	
 }
-#readonly -f ifEndsWith
+readonly -f ifEndsWith
 #debugFlagOn ifEndsWith
 
 #usage:  echo blah | command | ifArgsEqual a a | keep on going with output of command
@@ -232,7 +232,7 @@ ifArgsEqual()
 		return 0
 	fi
 }
-#readonly -f ifArgsEqual
+readonly -f ifArgsEqual
 #debugFlagOn ifArgsEqual
 
 #usage:  echo $LINES | ifNumberOfLinesEquals 5 | getLine 5 
@@ -242,8 +242,8 @@ ifNumberOfLinesEquals()
 	STDIN=$(getStdIn)
 	#debecho ifNumberOfLinesEquals stdin "$STDIN"
 	#COUNT=$(echo "$STDIN" | getLineCount)
-	#COUNT=$(getLineCount < <(echo "$STDIN"))
-	COUNT=$(getLineCount <<< "$STDIN")
+	COUNT=$(getLineCount < <(echo "$STDIN"))
+	#COUNT=$(getLineCount <<< "$STDIN")
 	#debecho ifNumberOfLinesEquals count "$COUNT"
 	#debecho ifNumberOfLinesEquals arg1 "$1"
 	
@@ -254,7 +254,7 @@ ifNumberOfLinesEquals()
 		return 0
 	fi
 }
-#readonly -f ifNumberOfLinesEquals
+readonly -f ifNumberOfLinesEquals
 #debugFlagOn ifNumberOfLinesEquals
 
 #usage:  echo $LINES | ifNumberOfLinesGreaterThan 5 | getLine 5 
@@ -263,8 +263,8 @@ ifNumberOfLinesGreaterThan()
 	local STDIN COUNT
 	STDIN=$(getStdIn)
 	#COUNT=$(echo "$STDIN" | getLineCount)
-	#COUNT=$(getLineCount < <(echo "$STDIN"))
-	COUNT=$(getLineCount <<< "$STDIN")
+	COUNT=$(getLineCount < <(echo "$STDIN"))
+	#COUNT=$(getLineCount <<< "$STDIN")
 	
 	if (( "$COUNT" > "$1" )); then
 		echo "$STDIN"
@@ -273,7 +273,7 @@ ifNumberOfLinesGreaterThan()
 		return 1
 	fi
 }
-#readonly -f ifNumberOfLinesGreaterThan
+readonly -f ifNumberOfLinesGreaterThan
 #debugFlagOn ifNumberOfLinesGreaterThan
 
 #usage:  echo $LINES | ifNumberOfLinesLessThan 5 | appendLine newLine 
@@ -282,8 +282,8 @@ ifNumberOfLinesLessThan()
 	local STDIN COUNT
 	STDIN=$(getStdIn)
 	#COUNT=$(echo "$STDIN" | getLineCount)
-	#COUNT=$(getLineCount < <(echo "$STDIN"))
-	COUNT=$(getLineCount <<< "$STDIN")
+	COUNT=$(getLineCount < <(echo "$STDIN"))
+	#COUNT=$(getLineCount <<< "$STDIN")
 	
 	if (( "$COUNT" < "$1" )); then
 		echo "$STDIN"
@@ -292,7 +292,7 @@ ifNumberOfLinesLessThan()
 		return 1
 	fi
 }
-#readonly -f ifNumberOfLinesLessThan
+readonly -f ifNumberOfLinesLessThan
 #debugFlagOn ifNumberOfLinesLessThan
 
 #description:  runs data thru a list of filters and echoes it back out if it passes all of them
@@ -310,7 +310,7 @@ filter()
 	for EACH in "${LIST[@]}"
 	do
 		#debecho filter each "$EACH"
-		makeCall "$EACH" <<< "$STDIN"
+		echo "$STDIN" | makeCall "$EACH" 
 		RV=$?
 		if [[ "$RV" != 0 ]] ; then
 			#debecho filter fails on "$EACH" 
@@ -322,6 +322,6 @@ filter()
 	#debecho filter succeeds output is "$STDIN"
 	return 0			
 }
-#readonly -f filter
+readonly -f filter
 #debugFlagOn filter
 

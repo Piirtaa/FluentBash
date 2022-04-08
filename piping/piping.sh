@@ -25,11 +25,12 @@ getStdIn()
 	#debecho getStdIn STDIN="$STDIN"
 	return 0
 }
-#readonly -f getStdIn
+readonly -f getStdIn
 #        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 #debugFlagOn getStdIn
 
-fn_exists() 
+#usage: isFunction myfunc
+isFunction() 
 {
 	local RES
 	RES=$(type -t "$1") 
@@ -39,7 +40,21 @@ fn_exists()
 		return 1
 	fi
 }
-#readonly -f fn_exists
+readonly -f isFunction
+
+#usage: isUserDefinedFunction myfunc
+isUserDefinedFunction() 
+{
+	local RES
+	RES=$(type -t "$1") 
+	if [[ "$RES" == function ]] ; then
+		return 0
+	else
+		return 1
+	fi
+}
+readonly -f isUserDefinedFunction
+
 
 #helper function to dynamically execute some stuff 
 makeCall()
@@ -62,7 +77,8 @@ makeCall()
 			#recurse
 			#note we do not quote each.  since we have already split, chained calls into makeCall do not have quote protection
 			#INPUT=$(echo "$INPUT" | makeCall $EACH ) 
-			INPUT=$(makeCall $EACH <<< "$INPUT") 
+			#INPUT=$(makeCall $EACH <<< "$INPUT") 
+			INPUT=$(makeCall $EACH < <(echo "$INPUT"))
 			RV=$?
 			#debecho makeCall rv "$RV"
 			#debecho makeCall result "$INPUT"
@@ -78,10 +94,11 @@ makeCall()
 	else
 		CALL="$1"
 		#debecho makeCall call "$CALL"
-		fn_exists "$CALL" || { debecho makeCall invalid function call "$@" ; return 1 ; }
+		isFunction "$CALL" || { debecho makeCall invalid function call "$@" ; return 1 ; }
 	
 		#RESULT=$(echo "$STDIN" | "$@" )	
-		RESULT=$("$@" <<< "$STDIN")	
+		#RESULT=$("$@" <<< "$STDIN")	
+		RESULT=$("$@" < <(echo "$STDIN"))
 		RV=$?
 		#debecho makeCall rv "$RV"
 		#debecho makeCall result "$RESULT"
@@ -94,7 +111,7 @@ makeCall()
 		fi
 	fi
 }
-#readonly -f makeCall
+readonly -f makeCall
 #debugFlagOn makeCall
 
 #sends stdin to the function passed in the args, and then echoes stdin.  
@@ -106,11 +123,12 @@ doJob()
 	#debecho doJob stdin "$STDIN"
 	#debecho doJob cmd "$@"
 	#RESULT=$(echo "$STDIN" | makeCall "$@" )	
-	RESULT=$(makeCall "$@" <<< "$STDIN")	
+	#RESULT=$(makeCall "$@" <<< "$STDIN")
+	RESULT=$(makeCall "$@" < <(echo "$STDIN"))	
 	#debecho doJob result "$RESULT"
 	echo "$STDIN"
 }
-#readonly -f doJob
+readonly -f doJob
 #debugFlagOn doJob
 
 #sends stdin to the function passed in the args, and then echoes stdin.  
@@ -125,7 +143,7 @@ doBackgroundJob()
 	#debecho doBackgroundJob result "$RESULT"
 	echo "$STDIN"
 }
-#readonly -f doBackgroundJob
+readonly -f doBackgroundJob
 #debugFlagOn doBackgroundJob
 
 
@@ -139,7 +157,7 @@ pipeTo()
 	shift
 	echo "$STDIN" | $@
 }
-#readonly -f pipeTo
+readonly -f pipeTo
 #debugFlagOn pipeTo
 
 runAsLastArg()
@@ -149,5 +167,5 @@ runAsLastArg()
 	COMMAND="$@"
 	echo "$($COMMAND $STDIN)"
 }
-#readonly -f runAsLastArg
+readonly -f runAsLastArg
 #debugFlagOn runAsLastArg

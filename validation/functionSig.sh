@@ -22,10 +22,7 @@ createSig()
 	fi
 
 	#test if the fnName is a function
-	if [[ $(type -t "$FNNAME") != function ]]; then
-		debecho createSig not a function "$FNNAME"
-		return 1
-	fi
+	isUserDefinedFunction "$FNNAME" || debecho createSig not a function "$FNNAME"; 	return 1;
 		
 	GRAM=$(kvgSet sig "$FNNAME")
 	
@@ -93,11 +90,9 @@ addSigValidator()
 		debecho addSigValidator no validator function provided
 		return 1	
 	fi
+
 	#test if is a function
-	if [[ $(type -t "$VALFN") != function ]]; then
-		debecho addSigValidator not a function "$VALFN"
-		return 1
-	fi
+	isUserDefinedFunction "$VALFN" || debecho addSigValidator not a function "$VALFN"; 	return 1 ;
 	
 	GRAM=$(echo "$GRAM" | kvgSet sig_validator "$@" )
 	VALFNBODY=$(declare -f "$VALFN" )	
@@ -143,10 +138,7 @@ addParamValidator()
 		return 1	
 	fi
 	#test if is a function
-	if [[ $(type -t "$VALFN") != function ]]; then
-		debecho addParamValidator not a function "$VALFN"
-		return 1
-	fi
+	isUserDefinedFunction "$VALFN" || debecho addParamValidator not a function "$VALFN"; return 1 ;
 	
 	GRAM=$(echo "$GRAM" | kvgSet paramvalidator_"$PARAM"_"$VALFN" "$@" )
 	VALFNBODY=$(declare -f "$VALFN" )	

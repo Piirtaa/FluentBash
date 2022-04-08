@@ -9,7 +9,7 @@
 {
 	export LC_ALL=C #to speed stuff up by not using any unicode
 	
-	typeset -r IS_CORE_LOADED=true
+	declare -r IS_CORE_LOADED=true
 
 	#set BASH_DIR.  this will clobber prior values.  all scripts are then loaded relative to the scriptloader
 	BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -19,14 +19,14 @@
 	#DEBUGGING STUFF
 	
 	#hash of debug flags
-	typeset -A DEBUG_FLAGS;
+	declare -A DEBUG_FLAGS;
 	
 	#enables a debug flag.  when enabled and passed to debecho (as first arg), the message is written
 	debugFlagOn()
 	{
 		DEBUG_FLAGS["$1"]=true
 	}
-	#readonly -f debugFlagOn
+	readonly -f debugFlagOn
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#disables a debug flag.  when disabled the message is not written
@@ -34,7 +34,7 @@
 	{
 		DEBUG_FLAGS["$1"]=false
 	}
-	#readonly -f debugFlagOff
+	readonly -f debugFlagOff
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#tests whether a debug flag has been set.  returns true only if explicitly set on
@@ -51,7 +51,7 @@
 		
 		return 1
 	}
-	#readonly -f isDebugFlagOn
+	readonly -f isDebugFlagOn
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#write a debug entry if the flag exists
@@ -69,7 +69,7 @@
 																												#						         ^^^ to stderr
 	  	return 0	  	
 	}
-	#readonly -f debecho 
+	readonly -f debecho 
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
 	#dumps contents of specified directory
@@ -82,7 +82,7 @@
 	    	echo 
 		done
 	}
-	#readonly -f dumpDirContents
+	readonly -f dumpDirContents
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	#debugFlagOn dumpDirContents	
 	
@@ -98,7 +98,7 @@
 			fi
 		done	
 	}
-	#readonly -f waitForKeyPress
+	readonly -f waitForKeyPress
 	
 	#generates random alpha numeric of given length (defaults to 5)
 	#usage:  genID length
@@ -108,12 +108,12 @@
 		LENGTH="${1:-5}"
 		cat /dev/urandom | env LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w "$LENGTH" | head -n 1	
 	}
-	#readonly -f genID
+	readonly -f genID
 	
 	#SCRIPT LOADER
 
 	#hash of debug flags
-	typeset -A LOADED_SCRIPTS;
+	declare -A LOADED_SCRIPTS;
 	
 	#mark the current script as loaded
 	LOADED_SCRIPTS["core/core.sh"]=$(date +"%y%m%d%H%M%S")
@@ -136,8 +136,15 @@
 		debecho loadScript already loaded "$1"
 		return 1
 	}
-	#readonly -f loadScript
-	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
+	readonly -f loadScript
 	#debugFlagOn loadScript	
+	
+	#usage: getScriptPath piping/lists.sh
+	getScriptPath()
+	{
+		echo "$BASH_DIR"'/../'"$1"
+		return 0
+	}
+	readonly -f getScriptPath
 }
 	

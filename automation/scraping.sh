@@ -9,7 +9,7 @@ source $BASH_DIR/../core/core.sh #first thing we load is the script loader
 #load dependencies.  
 loadScript automation/x11automation.sh
 
-#description:  given an attribute name, extracts the value
+#description:  given an attribute name, extracts the value.  eg. .... myAttr="xyz" ....
 #usage:  echo $html | extractAttributeValues myAttr
 extractAttributeValues()
 {
@@ -27,7 +27,7 @@ extractAttributeValues()
 }
 #debugFlagOn extractAttributeValues
 
-#description:  
+#description:  parses urls
 #usage:  echo $html | extractURLS 
 extractURLS()
 {

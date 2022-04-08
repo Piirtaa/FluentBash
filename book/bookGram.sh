@@ -2,6 +2,10 @@
 #summary:  fluent modelling
 #tags: model narrative fluent domain object 
 
+#WARNING!!!!!!!!!!!!!!!!!!!!
+#this is obsolete!!!  and very slow.  a more performant javascript solution doing the same basic thing is bookGram.js.
+
+
 #load loader first.  
 [ -z ${BASH_DIR} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . $BASH_DIR/../core/core.sh #first thing we load is the script loader
@@ -80,7 +84,7 @@ gsub_literal() {
     }
   '
 }
-#readonly -f gsub_literal
+readonly -f gsub_literal
 
 #description:  tests a key for unrelatedness and updates the keyline
 #usage:  echo "$GRAM" | _updateKeyPath keyPath
@@ -92,80 +96,56 @@ gsub_literal() {
 #	LIST=$(echo "$KEYLINE" | gsub_literal "_|_" $'\n') 
 #		
 #}
-##readonly -f _isUnrelatedKeyPath
+#readonly -f _isUnrelatedKeyPath
 
 #description:  constructs an add entry
-#usage:  _buildAddEntry keyPath data
-_buildAddEntry()
+#usage:  _buildEntry op keyPath data
+_buildEntry()
 {
-	local KEYPATH DATA LEN1 LEN2 
+	local OP KEYPATH DATA LEN1 LEN2 
+	OP="$1"
+	if [[ -z "$OP" ]]; then
+		#debecho _buildEntry op not provided
+		return 1
+	fi
+	shift
 	
 	KEYPATH="$1"
 	if [[ -z "$KEYPATH" ]]; then
-		#debecho _buildAddEntry keypath not provided
+		#debecho _buildEntry keypath not provided
 		return 1
 	fi
+	shift
 	
 	#validate the key has no newlines
 	local LINECOUNT
-	LINECOUNT=$(getLineCount <<< "$KEYPATH")
+	LINECOUNT=$(getLineCount < <(echo "$KEYPATH"))
 	if [[ "$LINECOUNT" != 1 ]]; then
-		#debecho _buildAddEntry invalid keypath
+		#debecho _buildEntry invalid keypath
 		return 1
 	fi
-	
-	LEN1=$(getLength <<< "$KEYPATH")
-	shift
-	DATA="$@"
-	if [[ -z "$DATA" ]]; then
-		#debecho _buildAddEntry data not provided
-		echo "add_""$LEN1""_0_""$KEYPATH"
-	else
-		LEN2=$(getLineCount <<< "$DATA")
-		echo "add_""$LEN1""_""$LEN2""_""$KEYPATH"
-		echo "$DATA"
-	fi
-	
-	return 0
-}
-#readonly -f _buildAddEntry
-#debugFlagOn _buildAddEntry
+	LEN1=$(getLength < <(echo "$KEYPATH"))
 
-#description:  constructs a remove entry
-#usage:  _buildRemoveEntry keyPath 
-#usage:  _buildRemoveEntry keyPath data
-_buildRemoveEntry()
-{
-	local KEYPATH DATA LEN1 LEN2 
-	
-	KEYPATH="$1"
-	if [[ -z "$KEYPATH" ]]; then
-		#debecho _buildRemoveEntry keypath not provided
-		return 1
-	fi
-	
-	#validate the key has no newlines
-	local LINECOUNT
-	LINECOUNT=$(getLineCount <<< echo "$KEYPATH")
-	if [[ "$LINECOUNT" != 1 ]]; then
-		#debecho _buildRemoveEntry invalid keypath
-		return 1
-	fi
-	
-	LEN1=$(getLength <<< echo "$KEYPATH")
-	shift
 	DATA="$@"
 	if [[ -z "$DATA" ]]; then
-		echo "remove_""$LEN1""_0_""$KEYPATH"
+		#debecho _buildEntry data not provided
+		echo "$OP""_""$LEN1""_0_""$KEYPATH"
 	else
-		LEN2=$(getLineCount <<< echo "$DATA")
-		echo "remove_""$LEN1""_""$LEN2""_""$KEYPATH"
-		echo "$DATA"
+		local LIST EACH TEMP
+		IFS=$'\n' read -d '' -r -a LIST <<< "$DATA"
+		for EACH in "${LIST[@]}"
+		do
+			TEMP=$(append "$EACH""<NL>" < <(echo "$TEMP")) 
+		done
+		TEMP=${TEMP::-4}
+		LEN2=$(getLength < <(echo "$TEMP"))
+		echo "$OP""_""$LEN1""_""$LEN2""_""$KEYPATH""_""$TEMP"			
 	fi
+	
 	return 0
 }
-#readonly -f _buildRemoveEntry
-#debugFlagOn _buildRemoveEntry
+readonly -f _buildEntry
+#debugFlagOn _buildEntry
 
 #MUTATORS --------------------------------------------------------------------------
 
@@ -178,11 +158,11 @@ addData()
 	if [[ ! -z "$STDIN" ]]; then
 		echo "$STDIN"
 	fi
-	ENTRY=$(_buildAddEntry "$@")
+	ENTRY=$(_buildEntry add "$@")
 	echo "$ENTRY"
 	return 0
 }
-#readonly -f addData
+readonly -f addData
 
 #description:  remove dataline
 #usage:  echo $gram | removeData keyPath 
@@ -196,164 +176,153 @@ removeData()
 		return 1
 	fi
 	echo "$STDIN"
-	ENTRY=$(_buildRemoveEntry "$@")
+	ENTRY=$(_buildEntry remove "$@")
 	echo "$ENTRY"
 	return 0	
 }
-#readonly -f removeData
+readonly -f removeData
 
 #ARRAY CONVERSION------------------------------------------------------------------
 #description:  converts datagram to 3 equal length arrays of key, data, and op
-#usage:  convertBookGramToArrays  keyArrayName dataArrayName opArrayName pathStartsWith <<< $gram
-convertBookGramToArrays()
+#usage:  bookToArrays  keyArrayName dataArrayName opArrayName pathStartsWith <<< $gram
+bookToArrays()
 {
 	local STDIN KEYPATH
 	STDIN=$(getStdIn)
 	if [[ -z "$STDIN" ]]; then
-		debecho convertBookGramToArrays stdin not provided
+		debecho bookToArrays stdin not provided
 		return 1
 	fi
-	#debecho convertBookGramToArrays stdin "$STDIN"
+	#debecho bookToArrays stdin "$STDIN"
 	
 	local -n RETURNKEYS=$1 #uses nameref bash 4.3+
 	local -n RETURNVALUES=$2 #uses nameref bash 4.3+
 	local -n RETURNOPS=$3 #uses nameref bash 4.3+
 	local PATHSTARTSWITH=$4
-	#debecho convertBookGramToArrays pathKey "$PATHSTARTSWITH"
+	#debecho bookToArrays pathKey "$PATHSTARTSWITH"
 	
 	local GRAMLEN
-	GRAMLEN=$(getLineCount <<< "$STDIN")
-	#debecho convertBookGramToArrays gramlen "$GRAMLEN"
-
-	local ARR I LINE ENTRYPATH ENTRYPATHLEN DATA DATALEN VERIFY_ENTRYPATHLEN ISENTRY ISMATCH OP
-	ISENTRY=false
+	GRAMLEN=$(getLineCount < <(echo "$STDIN"))
+	#debecho bookToArrays gramlen "$GRAMLEN"
+	
+	local ARR I LINE OP  
 	OP=""
 	IFS=$'\n' read -d '' -r -a ARR <<< "$STDIN"
+	
+	#debecho bookToArrays arrsize "${#ARR[@]}"
 	
 	#iterate over each line
 	for ((I = 0 ; I < "$GRAMLEN" ; I++)); do
 		LINE="${ARR[$I]}"
-		#debecho convertBookGramToArrays line "$LINE"
+		#debecho bookToArrays line "$LINE"
 		
 		#determine if it's an entry line
-		if [[ "$ISENTRY" == false ]]; then
-			#echo "$LINE" | ifStartsWith "add_" >/dev/null && ISENTRY=true && OP=add #&& debecho convertBookGramToArrays add op
-			ifStartsWith "add_" >/dev/null <<< "$LINE" && ISENTRY=true && OP=add #&& debecho convertBookGramToArrays add op
+		if [[ -z "$OP" ]]; then
+			#echo "$LINE" | ifStartsWith "add_" >/dev/null  && OP=add #&& debecho bookToArrays add op
+			ifStartsWith "add_" >/dev/null < <(echo "$LINE")  && OP=add #&& debecho bookToArrays add op
 		fi
 		
-		if [[ "$ISENTRY" == false ]]; then
-			#echo "$LINE" | ifStartsWith "remove_" >/dev/null && ISENTRY=true && OP=remove #&& debecho convertBookGramToArrays remove op
-			ifStartsWith "remove_" >/dev/null <<< "$LINE" && ISENTRY=true && OP=remove #&& debecho convertBookGramToArrays remove op
+		if [[ -z "$OP" ]]; then
+			#echo "$LINE" | ifStartsWith "remove_" >/dev/null && OP=remove #&& debecho bookToArrays remove op
+			ifStartsWith "remove_" >/dev/null < <(echo "$LINE") && OP=remove #&& debecho bookToArrays remove op
 		fi
 		
-		if [[ "$ISENTRY" == true ]]; then
-			#ENTRYPATHLEN=$(echo "$LINE" | getAfter "_" | getBefore "_")
-			#DATALEN=$(echo "$LINE" | getAfter "_" | getAfter "_" | getBefore "_" )
-			#ENTRYPATH=$(echo "$LINE" | getAfter "_" | getAfter "_" | getAfter "_" )
-			#VERIFY_ENTRYPATHLEN=$(echo "$ENTRYPATH" | getLength)
+		if [[ ! -z "$OP" ]]; then
+			local SEG1 SEG2 SEG3
+			local ENTRYPATH ENTRYPATHLEN DATA DATALEN VERIFY_ENTRYPATHLEN 
+			#line structure is op_keylen_datalen_key_data 
+			SEG1=$(getAfter "_" < <(echo "$LINE"))
+			#debecho bookToArrays seg1 "$SEG1"
+			ENTRYPATHLEN=$(getBefore "_" < <(echo "$SEG1"))
+			#debecho bookToArrays entrypathlen "$ENTRYPATHLEN"
+			SEG2=$(getAfter "_" < <(echo "$SEG1"))
+			#debecho bookToArrays seg2 "$SEG2"
+			DATALEN=$(getBefore "_" < <(echo "$SEG2"))
+			#debecho bookToArrays datalen "$DATALEN"
+			SEG3=$(getAfter "_" < <(echo "$SEG2"))
+			#debecho bookToArrays seg3 "$SEG3"
+			ENTRYPATH=$(getSubstring 0 "$ENTRYPATHLEN" < <(echo "$SEG3"))
+			#debecho bookToArrays entrypath "$ENTRYPATH"
 			
-			ENTRYPATHLEN=$(cut -d '_' -f 2 <<< "$LINE")
-			DATALEN=$(cut -d '_' -f 3 <<< "$LINE")
-			ENTRYPATH=$(cut -d '_' -f 1,2,3 --complement <<< "$LINE")
-			VERIFY_ENTRYPATHLEN=$(getLength <<< "$ENTRYPATH")
-			
-
-			
-			#ENTRYPATHLEN=$(getBefore "_" < <(getAfter "_" < <(echo "$LINE")))
-			#DATALEN=$(getBefore "_" < <(getAfter "_" < <(getAfter "_" < <(echo "$LINE"))))
-			#ENTRYPATH=$(getAfter "_" < <(getAfter "_" < <(getAfter "_" < <(echo "$LINE"))))
-			#VERIFY_ENTRYPATHLEN=$(getLength < <(echo "$ENTRYPATH"))
-			
-			#debecho convertBookGramToArrays entrypath "$ENTRYPATH"
-			#debecho convertBookGramToArrays entrypathlen "$ENTRYPATHLEN"
-			#debecho convertBookGramToArrays datalen "$DATALEN"
-			#debecho convertBookGramToArrays verify entrypathlen "$VERIFY_ENTRYPATHLEN"
-			#exit
-						
 			#verify and exit if there is bad data
+			VERIFY_ENTRYPATHLEN=$(getLength < <(echo "$ENTRYPATH"))
+			#debecho bookToArrays verify entrypathlen "$VERIFY_ENTRYPATHLEN"
 			if [[ "$VERIFY_ENTRYPATHLEN" != "$ENTRYPATHLEN" ]]; then
-				#debecho convertBookGramToArrays bad entry header.  path length mismatch.
+				debecho bookToArrays bad entry header.  path length mismatch. line "$I"
 				return 1
 			fi
 			
-			if [[ "$DATALEN" != 0 ]]; then
-				local STARTLINE 
-				STARTLINE=$((I + 1))
-				#debecho convertBookGramToArrays startline "$STARTLINE" 
-				#DATA=$(echo "$STDIN" | getLinesBelow "$STARTLINE" | getLinesAbove $((DATALEN +1 )) )
-				DATA=$(getLinesAbove $((DATALEN +1 )) < <(getLinesBelow "$STARTLINE" <<< "$STDIN")) 
-				
-				#move the index			
-				I=$((I + DATALEN))
+			if [[ $DATALEN != 0 ]]; then
+				ENTRYPATHLEN=$(( ENTRYPATHLEN +1 ))
+				DATA=$(getSubstring $ENTRYPATHLEN < <(echo "$SEG3"))
 			else
 				DATA=""
 			fi
-			#debecho convertBookGramToArrays data "$DATA"
+			#debecho bookToArrays data "$DATA"
 			
 			if [[ -z "$PATHSTARTSWITH" ]]; then
-				#debecho convertBookGramToArrays no path filter adding path "$ENTRYPATH"
+				#debecho bookToArrays no path filter adding path "$ENTRYPATH"
 				RETURNKEYS+=("$ENTRYPATH")
 				RETURNVALUES+=("$DATA")
 				RETURNOPS+=("$OP")
 			else
+				local ISMATCH=false
 				#echo "$ENTRYPATH" | ifStartsWith "$PATHSTARTSWITH" >/dev/null && ISMATCH=true
-				ifStartsWith "$PATHSTARTSWITH" >/dev/null <<< "$ENTRYPATH" && ISMATCH=true
+				ifStartsWith "$PATHSTARTSWITH" >/dev/null < <(echo "$ENTRYPATH") && ISMATCH=true
 				
 				if [[ "$ISMATCH" == true ]]; then
-					#debecho convertBookGramToArrays path filter "$PATHSTARTSWITH" adding path "$ENTRYPATH"
+					debecho bookToArrays path filter "$PATHSTARTSWITH" adding path "$ENTRYPATH"
 					RETURNKEYS+=("$ENTRYPATH")
 					RETURNVALUES+=("$DATA")
 					RETURNOPS+=("$OP")
 				fi
 			fi
 			#reset
-			ISENTRY=false
-			ISMATCH=fasle
 			OP=""
 		fi
 	done
 	
 	return 0	
 }
-#readonly -f convertBookGramToArrays
-#debugFlagOn convertBookGramToArrays
+readonly -f bookToArrays
+debugFlagOn bookToArrays
 
 #description:  creates book datagram from 3 equal length arrays of key, data, and op
-#usage:  buildBookGram  keyArrayName dataArrayName opArrayName 
-buildBookGram()
+#usage:  arraysToBook  keyArrayName dataArrayName opArrayName 
+arraysToBook()
 {
 	local -n KEYS=$1 #uses nameref bash 4.3+
 	local -n VALUES=$2 #uses nameref bash 4.3+
 	local -n OPS=$3 #uses nameref bash 4.3+
 	
-	local LEN KEY VALUE i OP GRAM
+	local LEN KEY VALUE i OP BOOK
 	LEN=${#VALUES[@]} #note we use the values array because we don't unset any of its values and thus don't mess with the length
-	#debecho buildBookGram len "$LEN"
+	#debecho arraysToBook len "$LEN"
 	
 	for ((i = 0 ; i < "$LEN" ; i++)); do
 		KEY="${KEYS[$i]}"
 		VALUE="${VALUES[$i]}"
 		OP="${OPS[$i]}"
 	
-		#debecho buildBookGram key "$KEY" op "$OP" value "$VALUE"
+		#debecho arraysToBook key "$KEY" op "$OP" value "$VALUE"
 		if [[ -z "$KEY" ]]; then
 			continue;
 		fi
 		
 		if [[ "$OP" == add ]]; then
-			GRAM=$(addData "$KEY" "$VALUE" <<< "$GRAM")
+			BOOK=$(addData "$KEY" "$VALUE" < <(echo "$BOOK"))
 		fi
 		
 		if [[ "$OP" == remove ]]; then
-			GRAM=$(removeData "$KEY" "$VALUE" <<< "$GRAM")
+			BOOK=$(removeData "$KEY" "$VALUE" < <(echo "$BOOK"))
 		fi
 	done
 	
-	echo "$GRAM"
+	echo "$BOOK"
 	return 0	
 }
-#readonly -f buildBookGram
-#debugFlagOn buildBookGram
+readonly -f arraysToBook
+#debugFlagOn arraysToBook
 
 #GETTERS --------------------------------------------------------------------------
 #description:  queries datagram.  returns subset of datagram where query is contained in either path or data
@@ -372,9 +341,9 @@ queryBook()
 	local -a TEMPVALUES
 	local -a TEMPOPS
 	
-	convertBookGramToArrays TEMPKEYS TEMPVALUES TEMPOPS <<< "$GRAM"
+	bookToArrays TEMPKEYS TEMPVALUES TEMPOPS < <(echo "$STDIN")
 		
-	local LEN KEY VALUE i OP GRAM SEARCH ISMATCH
+	local LEN KEY VALUE i OP SEARCH ISMATCH
 	LEN=${#TEMPVALUES[@]}
 	#debecho queryBook len "$LEN"
 	
@@ -387,8 +356,8 @@ queryBook()
 		for SEARCH in "$@" ; do
 			#echo "$KEY" | ifContains "$SEARCH"  >/dev/null && ISMATCH=true && break
 			#echo "$DATA" | ifContains "$SEARCH" >/dev/null && ISMATCH=true && break
-			ifContains "$SEARCH" <<< "$KEY" >/dev/null && ISMATCH=true && break
-			ifContains "$SEARCH" <<< "$DATA" >/dev/null && ISMATCH=true && break
+			ifContains "$SEARCH" < <(echo "$KEY") >/dev/null && ISMATCH=true && break
+			ifContains "$SEARCH" < <(echo "$DATA") >/dev/null && ISMATCH=true && break
 		done
 		
 		if [[ "$ISMATCH" == false ]]; then
@@ -401,11 +370,11 @@ queryBook()
 		fi
 	done
 	
-	buildBookGram TEMPKEYS TEMPVALUES TEMPOPS
+	arraysToBook TEMPKEYS TEMPVALUES TEMPOPS
 
 	return 0	
 }
-#readonly -f queryBook
+readonly -f queryBook
 #debugFlagOn queryBook
 
 #EMERGERS --------------------------------------------------------------------------
@@ -420,17 +389,18 @@ emergeBook()
 		return 1
 	fi
 	#debecho emergeBook stdin "$STDIN"
-	KEYPATH="$1"
+	#debecho emergeBook stdin "$(echo "$STDIN" | getLineCount)"
 	
+	KEYPATH="$1"
 	#debecho emergeBook keypath "$KEYPATH"
 	
 	local -a TEMPKEYS
 	local -a TEMPVALUES
 	local -a TEMPOPS
 	
-	convertBookGramToArrays TEMPKEYS TEMPVALUES TEMPOPS "$KEYPATH" <<< "$GRAM"
+	bookToArrays TEMPKEYS TEMPVALUES TEMPOPS "$KEYPATH" < <(echo "$STDIN")
 		
-	local LEN KEY VALUE i OP GRAM SEARCH ISMATCH
+	local LEN KEY VALUE i OP  
 	LEN=${#TEMPKEYS[@]}
 	
 	for ((i = 0 ; i < "$LEN" ; i++)); do
@@ -456,8 +426,8 @@ emergeBook()
 				#otherwise we are looking for an exact entry match of keyPath and data and removing just that entry
 				if [[ -z "$VALUE" ]]; then
 					#echo "$KEY2" | ifStartsWith "$KEY" >/dev/null && unset TEMPKEYS["$j"] && unset TEMPOPS["$j"] #&& debecho emergeBook remove key "$KEY2"
-					ifStartsWith "$KEY" <<< "$KEY2" >/dev/null && unset TEMPKEYS["$j"] && unset TEMPOPS["$j"] #&& debecho emergeBook remove key "$KEY2"
-				
+					#ifStartsWith "$KEY" <<< "$KEY2" >/dev/null && unset TEMPKEYS["$j"] && unset TEMPOPS["$j"] #&& debecho emergeBook remove key "$KEY2"
+					ifStartsWith "$KEY" < <(echo "$KEY2") >/dev/null && unset TEMPKEYS["$j"] && unset TEMPOPS["$j"] #&& debecho emergeBook remove key "$KEY2"
 				else
 					if [[ "$KEY" == "$KEY2" ]]; then
 						if [[ "$VALUE" == "$VALUE2" ]]; then
@@ -478,21 +448,13 @@ emergeBook()
 		fi
 	done
 	
-	buildBookGram TEMPKEYS TEMPVALUES TEMPOPS
+	arraysToBook TEMPKEYS TEMPVALUES TEMPOPS
  	
  	return 0
 }
-#readonly -f emergeBook
-#debugFlagOn emergeBook
+readonly -f emergeBook
+debugFlagOn emergeBook
 
-#description:  gets all the nonmatching book paths
-#usage:  echo $BOOK | getNonMatchingBookPaths
-getNonMatchingBookPaths()
-{
-	return 0
-}
-#readonly -f getNonMatchingBookPaths
-#debugFlagOn getNonMatchingBookPaths
 
 #description:  dumps the contents of an array
 #usage:  dumpArray varName
@@ -502,4 +464,4 @@ dumpArray()
 	local -n ARR=$1 #uses nameref bash 4.3+
 	for K in "${ARR[@]}"; do echo "$K" ; done
 }
-#readonly -f dumpArray
+readonly -f dumpArray

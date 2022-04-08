@@ -6,105 +6,61 @@
 
 
 #load dependencies.  
-loadScript book/bookGram.sh
-
-
-#GRAM=$(addData top "1
-#1 
-#1
-#1" )
-#
-#GRAM=$(echo "$GRAM" | addData top.level2A "2A
-#2A" )
-#
-#GRAM=$(echo "$GRAM" | addData top.level2B "2B
-#2B" )
-#
-#GRAM=$(echo "$GRAM" | addData top.level2A.level3A "2A3B
-#2A3B" )
-#
-#GRAM=$(echo "$GRAM" | removeData top.level2A )
-#echo "full gram"
-#echo "$GRAM" 
-#echo "------------"
-#
-#typeset -a OPS 
-#typeset -a KEYS
-#typeset -a VALUES
-
-#convertBookGramToArrays  KEYS VALUES OPS  <<< "$GRAM"
-
-#echo keys 
-#dumpArray KEYS
-#echo values
-#dumpArray VALUES
-#echo ops
-#dumpArray OPS
-#echo "------------"
-
-#echo convert to array top.level2A 
-#convertBookGramToArrays KEYS VALUES OPS top.level2A <<< "$GRAM"
-#echo keys 
-#dumpArray KEYS
-#echo values
-#dumpArray VALUES
-#echo ops
-#dumpArray OPS
-#echo "------------"
-#echo "query level2A"
-#echo "$GRAM" | queryBook level2A 
-#echo "------------"
-#echo "query level4"
-#echo "$GRAM" | queryBook level4 
-#echo "------------"
-#echo "emerge top.level2A"
-#echo "$GRAM" | emergeBook top.level2A
-#echo "------------"
-#echo "emerge top"
-#echo "$GRAM" | emergeBook top 
-#echo "------------"
+loadScript piping/piping.sh
+loadScript piping/strings.sh
+loadScript piping/lists.sh
+loadScript piping/conditionals.sh
 
 function generateGram()
 {
-	local I J LENGTH BRANCH GRAM DATA KEY
-	LENGTH=1000
-	BRANCH=0
-	DATA=$(echo "dataline1"; echo "dataline2"; echo "dataline3"; echo "dataline4"; echo "dataline5"; echo "dataline6"; echo "dataline7"; echo "dataline8"; echo "dataline9"; ) 
-
-	for ((I = 0 ; I < "$LENGTH" ; I++)); do
-		BRANCH=$((BRANCH +1))
-		if (( "$BRANCH" >= 10 )); then
-			BRANCH=1
-		fi
+	local LEVELS=5 
+	local BRANCHES=5
+	local GRAM L B KEYPATH DATA BRANCHPATH
+	GRAM=""
+	KEYPATH=""
+	for ((L = 0 ; L < "$LEVELS" ; L++)); do
+		KEYPATH="$KEYPATH"_"level""$L"
+		DATA="level""$L""data"
+		GRAM=$(echo "$GRAM" | ./bookGram.js add "$KEYPATH" "$DATA")
 		
-		KEY=branch"$BRANCH"
-		#GRAM=$(echo "$GRAM" | addData "$KEY" "$DATA")	
-		GRAM=$(addData "$KEY" "$DATA" <<< "$GRAM")	
-
+		for ((B = 0; B < "$BRANCHES"; B++)); do
+			BRANCHPATH="$KEYPATH""branch""$B"
+			DATA="branch""$B""data"
+			DATA=$(echo "$DATA" | appendLine "$DATA" | appendLine "$DATA")
+			GRAM=$(echo "$GRAM" | ./bookGram.js add "$BRANCHPATH" "$DATA")		
+		done
+		
+		GRAM=$(echo "$GRAM" | ./bookGram.js remove "$BRANCHPATH" "$DATA")		
+		
+		
 	done
-	
-	echo "$GRAM"  
-	
+	echo "$GRAM"
 }
 
-function emerge1()
-{
-	emergeBook <<< "$GRAM" >/dev/null
-}
-function emerge2()
-{
-	echo "$GRAM" | emergeBook >/dev/null
-}
-function emerge3()
-{
-	emergeBook < <(echo "$GRAM") >/dev/null
-}
+MYGRAM=$(generateGram)
+#echo raw gram
+#echo
+#echo "$MYGRAM"
+#echo
+#echo formatted gram
+#echo
+#echo "$MYGRAM" | ./bookGram.js format "{0} {1}"
+#echo
+#echo emerged
+#echo
+#echo "$MYGRAM" | ./bookGram.js emerge
+#echo
+#echo emerged formatted
+#echo
+#echo "$MYGRAM" | ./bookGram.js emerge | ./bookGram.js format "key: {0}"
+#echo "$MYGRAM" | ./bookGram.js emerge | ./bookGram.js format "data: {1}"
+#echo
+#echo "$MYGRAM" | ./bookGram.js emerge _level0_level1 | ./bookGram.js format "{0} {1}"
+#echo
+#echo query
+#echo "$MYGRAM" | ./bookGram.js query level3 | ./bookGram.js format "{0} {1}"
+echo getExactValues
+echo "$MYGRAM" | ./bookGram.js getExactValues _level0_level1 
 
+exit
 
-GRAM=$(generateGram)
-echo heredoc
-time emerge1
-echo pipe
-time emerge2 
-echo process sub
-time emerge3

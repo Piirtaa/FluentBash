@@ -37,7 +37,7 @@ getArrayItem()
 	#debecho getArrayItem ITEM="$ITEM"
 	return "$RV"
 }
-#readonly -f getArrayItem
+readonly -f getArrayItem
 #debugFlagOn getArrayItem
 
 #usage:  echo "a:b c:d e f" | getArrayItemsAsLines :
@@ -66,7 +66,7 @@ getArrayItemsAsLines()
 	
 	return "$RV"
 }
-#readonly -f getArrayItemsAsLines
+readonly -f getArrayItemsAsLines
 #debugFlagOn getArrayItemsAsLines
 
 #usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
@@ -76,9 +76,10 @@ getFirstArrayItem()
 	local STDIN
 	STDIN=$(getStdIn) 
 	#echo $STDIN | getArrayItem 0 "$1"
-	getArrayItem 0 "$1" <<< $STDIN
+	#getArrayItem 0 "$1" <<< $STDIN
+	getArrayItem 0 "$1" < <(echo $STDIN)
 }
-#readonly -f getFirstArrayItem
+readonly -f getFirstArrayItem
 #debugFlagOn getFirstArrayItem
 
 #usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
@@ -88,27 +89,27 @@ getFirstArrayItemRemainder()
 	local STDIN ITEM ITEMLEN DELIMLEN LEN REM RV
 	STDIN=$(getStdIn) 
 	#ITEM=$(echo "$STDIN" | getFirstArrayItem "$1")
-	#ITEM=$(getFirstArrayItem "$1" < <(echo "$STDIN"))
-	ITEM=$(getFirstArrayItem "$1" <<< "$STDIN")
+	ITEM=$(getFirstArrayItem "$1" < <(echo "$STDIN"))
+	#ITEM=$(getFirstArrayItem "$1" <<< "$STDIN")
 	#debecho getFirstArrayItemRemainder item "$ITEM"
 	#ITEMLEN=$(echo "$ITEM" | getLength)
-	#ITEMLEN=$(getLength < <(echo "$ITEM"))
-	ITEMLEN=$(getLength <<< echo "$ITEM")
+	ITEMLEN=$(getLength < <(echo "$ITEM"))
+	#ITEMLEN=$(getLength <<< echo "$ITEM")
 	#DELIMLEN=$(echo "$1" | getLength)
-	#DELIMLEN=$(getLength < <(echo "$1"))
-	DELIMLEN=$(getLength <<< echo "$1")
+	DELIMLEN=$(getLength < <(echo "$1"))
+	#DELIMLEN=$(getLength <<< echo "$1")
 	LEN=$((ITEMLEN + DELIMLEN))
 	#debecho getFirstArrayItemRemainder len "$LEN"
 	#REM=$(echo "$STDIN" | getSubstring "$LEN")
-	#REM=$(getSubstring "$LEN" < <(echo "$STDIN"))
-	REM=$(getSubstring "$LEN" <<< echo "$STDIN")
+	REM=$(getSubstring "$LEN" < <(echo "$STDIN"))
+	#REM=$(getSubstring "$LEN" <<< echo "$STDIN")
 	#debecho getFirstArrayItemRemainder remainder "$REM"
 	
 	RV=$?
 	echo "$REM"
 	return "$RV"
 }
-#readonly -f getFirstArrayItemRemainder
+readonly -f getFirstArrayItemRemainder
 #debugFlagOn getFirstArrayItemRemainder
 
 #splits stdin into an array (using $1 as the delim) and then performs a function ($2+) on each item (piped into the function)
@@ -130,7 +131,8 @@ doEach()
 		do
 			#debecho doEach each "$EACH"
 			#echo "$EACH" | makeCall "$@"
-			makeCall "$@" <<< "$EACH"			
+			#makeCall "$@" <<< "$EACH"
+			makeCall "$@" < <(echo "$EACH")			
 		done
 		
 		RV=0
@@ -141,7 +143,7 @@ doEach()
 	
 	return "$RV"
 }
-#readonly -f doEach
+readonly -f doEach
 #debugFlagOn doEach
 
 #reads stdin as lines and then performs a function ($2+) on each item (piped into the function)
@@ -157,12 +159,13 @@ doEachLine()
 	do
 		#debecho doEachLine each "$EACH"
 		#echo "$EACH" | makeCall "$@"
-		makeCall "$@" <<< "$EACH"			
+		#makeCall "$@" <<< "$EACH"	
+		makeCall "$@" < <(echo "$EACH")		
 	done
 
 	return 0
 }
-#readonly -f doEachLine
+readonly -f doEachLine
 #debugFlagOn doEachLine
 
 #appends stdin to the provided file arg.  
@@ -180,7 +183,7 @@ appendToFile()
 	$(echo "$STDIN"  >> "$FILE" )  
 
 }
-#readonly -f appendToFile
+readonly -f appendToFile
 #debugFlagOn appendToFile
 
 #joins two lists together of the same length, side by side
@@ -210,5 +213,5 @@ sideJoinLists()
  	done
  	return 0
 }
-#readonly -f sideJoinLists
+readonly -f sideJoinLists
 #debugFlagOn sideJoinLists
