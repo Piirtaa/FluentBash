@@ -3,20 +3,29 @@ bash scripting done fluently
 
 Features:
 
-	Key-Value store written entirely in Bash that allows data to be persisted across shell instances.
-
-	Variable store that allows variables to be easily shared between shells.
-
-	Fluent string and list mutation
-
-	Fluent tests/conditionals, facilitating inline tests as part of the construction of data
+	Common bash functions done in a fluent idiom allowing logic to be easily chained together.  
 	
-	Reactive programming allowing triggers to be defined and chained together which are persistant across reboot.
-
-	Fluent validation of function signatures, decoupled from function 
+	Dependency loading.  
 	
-	Much cleaner and more readable Bash scripting
+	Fluent string and list mutation.  Eg.  "echo line1 | appendLine line2 | appendLine line3 | prependLine line0 | replaceLine 1 line0a | removeLine 2 | insertLine 2 line2redux | ifNumberOfLinesGreaterThan 4 | doEachLine ifStartsWith line | appendToFile myFile | getLine 2" 
 
+	Fluent tests/conditionals, availing a pattern of "echo $data | filter1 | filter2 | filter3" which allows things like validating data as you construct it, filtering lists, stashing and recalling data during iteration.  Eg.  "echo goodLine1 | appendLine goodLine2 | appendLine badLine | appendLine goodLine3 | appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile ; cat tempFile | doEachLine ifStartsWith good | appendToFile goodFile ; rm tempFile" 
+	
+	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell (and sub-shell) instances.  Eg. "setKV myKey myValue" ; getKV myKey"  
+
+	Variable store that allows variables to be easily shared between shells.   Eg.  " BOB='bob'; shareVar myExportedVarsFile BOB ; doUpdate myExportedVarsFile ; unshareVar myExportedVarsFile BOB"
+		
+	Reactive programming allowing event-driven logic to be constructed which is persistent, and which can be chained together to create complex workflows.  Eg.  initStepA(){...} stepATriggerEvent(){...} doStepA(){...} ; createTrigger stepA stepATriggerEvent | doBeforeTrigger initStepA | doAfterTrigger doStepA ; activateTrigger stepA myPollingInterval ;
+	
+	Fluent validation of function signatures, decoupled from function.  For example, this is useful if we need to inject additional validation strategies into externally provided logic. Eg. addThreeNumbers(){...} ; createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 | addParameter arg3 3 false 0 | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15 ; validateSig addThreeNumbers 1 11 15 ;
+	
+	A bunch of systems stuff for programmatically spinning up sockets, http servers, hotspots, port knocking logic, etc.  Too many to summarize quickly.  Look in the sockets, http, hotspot and recipes folders for examples.
+	
+	X-automation including automation of firefox, webscraping, etc.
+	
+	A process-shim framework for intercepting stdin/stdout of a process so that it can be more easily managed.  For example, this allows javascript engines to be REPL-ized such that they can be talked to via shell commands.
+	
+	A javascript sandbox for executing standalone js.  A javascript REPL.
 
 See the various Test scripts for example usage.
 
@@ -47,7 +56,7 @@ To load up a specific library/functionality add a "loadScript" call.  eg.
 	loadScript caching/keyValueStore.sh
 
 -------------
-Examples of the functionality expressed as bash tests.
+Brief xxamples of some of the functionality expressed as bash tests.
 
 
 STRINGS  
@@ -59,58 +68,6 @@ STRINGS
 	[ "$(echo "abc" | getSubstring 0)" == "abc" ]
 
 	[ "$(echo "abc" | getSubstring 1)" == "bc" ]
-
-	[ "$(echo "abc" | getSubstring 3)" == "" ]
-
-	[ "$(echo "a" | append b)" == "ab" ]
-
-	[ "$(echo "a" | prepend b)" == "ba" ]
-
-	[ "$(echo "a" | appendLine b | getLine 1 )" == "a" ]
-	
-	[ "$(echo "a" | appendLine b | getLine 2 )" == "b" ]
-
-	[ "$(echo "a" | prependLine b | getLine 1 )" == "b" ]
-	
-	[ "$(echo "a" | prependLine b | getLine 2 )" == "a" ]
-	
-	[ "$(echo "a" | prependLine b | replaceLine 2 c | getLine 2 )" == "c" ]
-	
-	[ "$(echo "a" | prependLine b | replaceLine 2 c | getLine 1 )" == "b" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | appendOnLine 2 d | getLine 2 )" == "bd" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | prependOnLine 2 d | getLine 2 )" == "db" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | insertLine 2 d | getLine 1 )" == "a" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | insertLine 2 d | getLine 2 )" == "d" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | insertLine 2 d | getLine 3 )" == "b" ]
-
-	[ "$(echo "a" | appendLine b | appendLine c | insertLine 2 d | getLine 4 )" == "c" ]
-
-	LIST=$(echo a | appendLine b | appendLine c | appendLine d | appendLine e | appendLine f);
-
-	[ "$(echo "$LIST" | insertLine 1 x | getLine 1 )" == "x" ]
-
-	[ "$(echo "$LIST" | getLinesAbove 1 | getLine 1 )" == "" ]
-
-	[ "$(echo "$LIST" | getLinesAbove 0 | getLine 1 )" == "" ]
-
-	[ "$(echo "$LIST" | getLinesAbove 10 | getLine 1 )" == "a" ]
-
-	[ "$(echo "$LIST" | getLinesBelow 1 | getLine 1 )" == "b" ]
-
-	[ "$(echo "$LIST" | getLinesBelow 0 | getLine 1 )" == "a" ]
-
-	[ "$(echo "$LIST" | replaceLine 1 x | getLine 1 )" == "x" ]
-
-	[ "$(echo "$LIST" | removeLine 1  | getLine 1 )" == "b" ]
-
-	[ "$(echo "$LIST" | replaceLine 3 x | getLine 3 )" == "x" ]
-			
-
 
 LISTS
 
@@ -126,25 +83,9 @@ LISTS
 
 	[ "$(echo "a,b,c" | getArrayItem 0 ,)" == "a" ]
 
-	[ "$(echo "a,b,c" | getArrayItem 1 ,)" == "b" ]
-
-	[ "$(echo "a,b,c" | getArrayItem 4 ,)" == "" ]
-
-	[ "$(echo "a,b,c" | getFirstArrayItem , )" == "a" ]
-
-	[ "$(echo "a,b,c" | getFirstArrayItemRemainder , )" == "b,c" ]
-
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | getLine 1 =a)" == "a" ]
-
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | getLine 2 =b)" == "b" ]
-	
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | getLine 3 =c)" == "c" ]
-
 	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp | touch derp; cat derp  | getLine 1 ; rm derp )" == "A dog" ]
 
 	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  | getLine 2 ; rm derp )" == "A cat" ]
-
-
 
 CONDITIONALS
 
@@ -173,14 +114,6 @@ CONDITIONALS
 	[ "$(echo "abc" | ifEndsWith a)" == "" ]
 
 	[ "$(echo "abc" | ifArgsEqual a a)" == "abc" ]
-
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesEquals 3 | getLine 1 =a)" == "a" ]
-
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesGreaterThan 2 | getLine 1 =a)" == "a" ]
-
-	[ "$(echo "a,b,c" | getArrayItemsAsLines , | ifNumberOfLinesLessThan 4 | getLine 1 =a)" == "a" ]
-
-
 
 PERSISTING VARIABLES
 	
