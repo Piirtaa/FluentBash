@@ -1,8 +1,6 @@
 #!/bin/bash
-#summary:  fluent conditional functions
+#summary:  fluent conditional functions.  will echo back stdin if the condition is met and return 0.
 #tags: conditionals
-
-#lib that provides some stdin functions
 
 #load loader first.  
 [ -z ${BASH_DIR} ] && BASH_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -13,7 +11,7 @@ loadScript piping/piping.sh
 loadScript piping/strings.sh
 loadScript piping/lists.sh
 
-#echoes pipe to stdout if stdin contains $1
+#description: echoes pipe to stdout if stdin contains $1
 #usage:  echo abc | ifContains b | ...will echo abc
 ifContains()
 {
@@ -35,6 +33,8 @@ ifContains()
 readonly -f ifContains
 #debugFlagOn ifContains
 
+#description: echoes pipe to stdout if stdin does not contain $1
+#usage:  echo abc | ifNotContains d | ...will echo abc
 ifNotContains()
 {
 	local STDIN
@@ -55,7 +55,7 @@ ifNotContains()
 readonly -f ifNotContains
 #debugFlagOn ifNotContains
 
-#echoes pipe to stdout if stdin contains each arg
+#description: echoes pipe to stdout if stdin contains each arg
 #usage:  echo abc | ifContainsAll b a c | ...will echo abc
 ifContainsAll()
 {
@@ -76,6 +76,8 @@ ifContainsAll()
 readonly -f ifContainsAll
 #debugFlagOn ifContainsAll
 
+#description: echoes pipe to stdout if stdin does not contain each arg
+#usage:  echo abc | ifContainsNone d e | ...will echo abc
 ifContainsNone()
 {
 	local STDIN EACH
@@ -95,7 +97,7 @@ ifContainsNone()
 readonly -f ifContainsNone
 #debugFlagOn ifContainsNone
 
-#echoes pipe to stdout if stdin equals $1
+#description: echoes pipe to stdout if stdin equals $1
 #usage:  echo abc | ifEquals abc | ...will echo abc
 ifEquals()
 {
@@ -115,7 +117,7 @@ ifEquals()
 readonly -f ifEquals
 #debugFlagOn ifEquals
 
-#echoes pipe to stdout if stdin not equals $1
+#description: echoes pipe to stdout if stdin not equals $1
 #usage:  echo abc | ifNotEquals dafd | ...will echo abc
 ifNotEquals()
 {
@@ -135,7 +137,7 @@ ifNotEquals()
 readonly -f ifNotEquals
 #debugFlagOn ifNotEquals
 
-#echoes pipe to stdout if stdin equals $1
+#description: echoes pipe to stdout if stdin length equals $1
 #usage:  echo abc | ifLengthOf 3 | ...will echo abc
 ifLengthOf()
 {
@@ -154,6 +156,7 @@ ifLengthOf()
 readonly -f ifLengthOf
 #debugFlagOn ifLengthOf
 
+#description: echoes stdin if stdin starts with $1
 #usage:  echo abc | ifStartsWith ab | ...will echo abc
 ifStartsWith()
 {
@@ -177,6 +180,7 @@ ifStartsWith()
 readonly -f ifStartsWith
 #debugFlagOn ifStartsWith
 
+#description: echoes stdin if stdin does not start with $1
 #usage:  echo abc | ifNotStartsWith cd | ...will echo abc
 ifNotStartsWith()
 {
@@ -200,6 +204,7 @@ ifNotStartsWith()
 readonly -f ifNotStartsWith
 #debugFlagOn ifNotStartsWith
 
+#description: echoes stdin if stdin ends with $1
 #usage:  echo abc | ifEndsWith abc | ...will echo abc
 ifEndsWith()
 {
@@ -219,6 +224,31 @@ ifEndsWith()
 readonly -f ifEndsWith
 #debugFlagOn ifEndsWith
 
+#description: echoes stdin if stdin does not start with $1
+#usage:  echo abc | ifNotStartsWith cd | ...will echo abc
+ifNotEndsWith()
+{
+	local STDIN
+	STDIN=$(getStdIn)
+	#debecho ifNotEndsWith stdin "$STDIN"
+	if [[ -z "$STDIN" ]]; then
+		#debecho ifNotEndsWith stdin is empty
+		return 1
+	else
+		if [[ "$STDIN" == *"$1" ]]; then
+			#debecho ifNotEndsWith stdin contains "$1"
+			return 1
+		else
+			#debecho ifNotEndsWith stdin does not contain "$1"
+			echo "$STDIN"
+			return 0
+		fi
+	fi	
+}
+readonly -f ifNotEndsWith
+#debugFlagOn ifNotEndsWith
+
+#description: echoes stdin if args are equal
 #usage:  echo blah | command | ifArgsEqual a a | keep on going with output of command
 ifArgsEqual()
 {
@@ -235,6 +265,7 @@ ifArgsEqual()
 readonly -f ifArgsEqual
 #debugFlagOn ifArgsEqual
 
+#description:  echoes stdin if stdin has $1 lines
 #usage:  echo $LINES | ifNumberOfLinesEquals 5 | getLine 5 
 ifNumberOfLinesEquals()
 {
@@ -257,6 +288,7 @@ ifNumberOfLinesEquals()
 readonly -f ifNumberOfLinesEquals
 #debugFlagOn ifNumberOfLinesEquals
 
+#description: echoes stdin if stdin has more than $1 lines
 #usage:  echo $LINES | ifNumberOfLinesGreaterThan 5 | getLine 5 
 ifNumberOfLinesGreaterThan()
 {
@@ -276,6 +308,7 @@ ifNumberOfLinesGreaterThan()
 readonly -f ifNumberOfLinesGreaterThan
 #debugFlagOn ifNumberOfLinesGreaterThan
 
+#description: echoes stdin if stdin has less than $1 lines
 #usage:  echo $LINES | ifNumberOfLinesLessThan 5 | appendLine newLine 
 ifNumberOfLinesLessThan()
 {
@@ -295,7 +328,7 @@ ifNumberOfLinesLessThan()
 readonly -f ifNumberOfLinesLessThan
 #debugFlagOn ifNumberOfLinesLessThan
 
-#description:  runs data thru a list of filters and echoes it back out if it passes all of them
+#description:  runs data thru a list of filter functions (provided by a variable) and echoes it back out if it passes all of them.
 #usage:  echo $data | filter filterVarName
 filter()
 {

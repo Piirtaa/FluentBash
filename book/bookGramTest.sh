@@ -10,10 +10,11 @@ loadScript piping/piping.sh
 loadScript piping/strings.sh
 loadScript piping/lists.sh
 loadScript piping/conditionals.sh
+loadScript piping/jsSandbox.sh
 
-function generateGram()
+function generateGram1()
 {
-	local LEVELS=5 
+	local LEVELS=5000
 	local BRANCHES=5
 	local GRAM L B KEYPATH DATA BRANCHPATH
 	GRAM=""
@@ -37,7 +38,9 @@ function generateGram()
 	echo "$GRAM"
 }
 
-MYGRAM=$(generateGram)
+time generateGram1
+
+#MYGRAM=$(generateGram)
 #echo raw gram
 #echo
 #echo "$MYGRAM"
@@ -59,8 +62,8 @@ MYGRAM=$(generateGram)
 #echo
 #echo query
 #echo "$MYGRAM" | ./bookGram.js query level3 | ./bookGram.js format "{0} {1}"
-echo getExactValues
-echo "$MYGRAM" | ./bookGram.js getExactValues _level0_level1 
+#echo getExactValues
+#echo "$MYGRAM" | ./bookGram.js getExactValues _level0_level1 
 
 exit
 

@@ -16,12 +16,13 @@
 	#flag it as readonly
 	readonly BASH_DIR
 	
-	#DEBUGGING STUFF
+	#DEBUGGING STUFF##############################################################################
 	
 	#hash of debug flags
 	declare -A DEBUG_FLAGS;
 	
-	#enables a debug flag.  when enabled and passed to debecho (as first arg), the message is written
+	#description: enables a debug flag.  when enabled and passed to debecho (as first arg), the message is written
+	#usage: debugFlagOn myFlag 
 	debugFlagOn()
 	{
 		DEBUG_FLAGS["$1"]=true
@@ -29,7 +30,8 @@
 	readonly -f debugFlagOn
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
-	#disables a debug flag.  when disabled the message is not written
+	#description:disables a debug flag.  when disabled the message is not written
+	#usage: debugFlagOff myFlag 
 	debugFlagOff()
 	{
 		DEBUG_FLAGS["$1"]=false
@@ -54,8 +56,8 @@
 	readonly -f isDebugFlagOn
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
-	#write a debug entry if the flag exists
-	#usage: debecho flagName text to write out
+	#description:  writes a debug entry if the flag exists
+	#usage: debecho flagName textToWriteOut
 	debecho () 
 	{
 		local IDX STACK
@@ -72,7 +74,9 @@
 	readonly -f debecho 
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	
-	#dumps contents of specified directory
+	#UTILITY FUNCTIONS######################################################################################
+	#description:  dumps contents of specified directory
+	#usage:  dumpDirContents myDir
 	dumpDirContents()
 	{
 		for FILE in "$1"/*; do
@@ -86,6 +90,8 @@
 	#        ^^^ -f typeset functions readonly to prevent overwriting and notify of duplicate lib calls
 	#debugFlagOn dumpDirContents	
 	
+	#description: waits for a keypress
+	#usage: waitForKeyPress
 	waitForKeyPress()
 	{
 		echo "Press any key to continue"
@@ -100,7 +106,7 @@
 	}
 	readonly -f waitForKeyPress
 	
-	#generates random alpha numeric of given length (defaults to 5)
+	#description: generates random alpha numeric of given length (defaults to 5)
 	#usage:  genID length
 	genID()
 	{
@@ -110,7 +116,7 @@
 	}
 	readonly -f genID
 	
-	#SCRIPT LOADER
+	#SCRIPT LOADER#################################################################################################
 
 	#hash of debug flags
 	declare -A LOADED_SCRIPTS;
@@ -118,7 +124,8 @@
 	#mark the current script as loaded
 	LOADED_SCRIPTS["core/core.sh"]=$(date +"%y%m%d%H%M%S")
 	
-	#loads a script if it hasn't already been loaded
+	#description: loads a script if it hasn't already been loaded
+	#usage:  loadScript subFolderOfFluentBash/scriptName.sh
 	loadScript()
 	{
 		if [ ! -v LOADED_SCRIPTS["$1"] ]; then
@@ -139,7 +146,8 @@
 	readonly -f loadScript
 	#debugFlagOn loadScript	
 	
-	#usage: getScriptPath piping/lists.sh
+	#description:  gets the path of the specified script
+	#usage: getScriptPath subFolderOfFluentBash/scriptName.sh
 	getScriptPath()
 	{
 		echo "$BASH_DIR"'/../'"$1"

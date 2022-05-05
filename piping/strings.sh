@@ -11,8 +11,30 @@ loadScript piping/piping.sh
 loadScript piping/lists.sh
 loadScript piping/conditionals.sh
 
+#description:  performs a find/replace on whatever was piped in
+#usage:  echo $string | replace stringToFind stringToReplaceWith
+replace()
+{
+	local STDIN FTEXT RTEXT OUTPUT
+	STDIN=$(getStdIn)
 
-#returns length of whatever was piped in
+	if [[ -z "$STDIN" ]]; then
+		return 1
+	fi
+	
+	FTEXT="$1"
+	if [[ -z "$FTEXT" ]]; then
+		return 1
+	fi
+	RTEXT="$2"
+	
+	OUTPUT=$("${STDIN//"$FTEXT"/"$RTEXT"}")
+	echo "$OUTPUT"
+	return 0
+}
+
+#description: returns length of whatever was piped in
+#usage:  echo $string | getLength
 getLength()
 {
 	local STDIN
@@ -27,6 +49,7 @@ getLength()
 readonly -f getLength
 #debugFlagOn getLength
 
+#description:  returns substring
 #usage:  echo abc | getSubString startPos length
 getSubstring()
 {
@@ -47,6 +70,7 @@ getSubstring()
 readonly -f getSubstring
 #debugFlagOn getSubstring
 
+#description:  gets index of substring
 #usage: echo abcdef | getIndexOf cd
 getIndexOf()
 {
@@ -68,6 +92,7 @@ getIndexOf()
 	return 1
 }
 
+#description:  gets portion of string before provided argument
 #usage: echo abcdef | getBefore cd
 getBefore()
 {	
@@ -92,6 +117,7 @@ getBefore()
 readonly -f getBefore
 #debugFlagOn getBefore
 
+#description:  gets portion of string after provided argument
 #usage: echo abcdef | getAfter cd
 getAfter()
 {
@@ -119,6 +145,8 @@ getAfter()
 readonly -f getAfter
 #debugFlagOn getAfter
 
+#description: gets the number of lines 
+#usage: echo $text | getLineCount
 getLineCount()
 {
 	local STDIN LINECOUNT
@@ -132,7 +160,8 @@ getLineCount()
 readonly -f getLineCount
 #debugFlagOn getLineCount
  
-#usage echo $RESULT | getLine 1
+#description:  gets the specified line 
+#usage: echo $RESULT | getLine 1
 getLine()
 {
 	local STDIN LINECOUNT LINE
@@ -156,8 +185,8 @@ getLine()
 readonly -f getLine
 #debugFlagOn getLine
 
-
-#usage echo $RESULT | getLinesBelow 3
+#description:  gets the lines after the provided line number
+#usage: echo $RESULT | getLinesBelow 3
 getLinesBelow()
 {
 	local STDIN POS
@@ -172,8 +201,8 @@ getLinesBelow()
 readonly -f getLinesBelow
 #debugFlagOn getLinesBelow
 
-
-#usage echo $RESULT | getLinesAbove 3
+#description:  gets the lines before the provided line number
+#usage: echo $RESULT | getLinesAbove 3
 getLinesAbove()
 {
 	local STDIN POST
@@ -189,6 +218,7 @@ getLinesAbove()
 readonly -f getLinesAbove
 #debugFlagOn getLinesAbove
 
+#description:  prepends a string
 #usage:  echo something | prepend prefix
 prepend()
 {
@@ -199,6 +229,7 @@ prepend()
 readonly -f prepend
 #debugFlagOn prepend
 
+#description:  appends a string
 #usage:  echo something | append suffix
 append()
 {
@@ -209,6 +240,7 @@ append()
 readonly -f append
 #debugFlagOn append
 
+#description:  prepends a line 
 #usage:  echo something | prependLine topline
 prependLine()
 {
@@ -224,6 +256,7 @@ prependLine()
 readonly -f prependLine
 #debugFlagOn prependLine
 
+#description: appends a line
 #usage:  echo something | appendLine bottomline
 appendLine()
 {
@@ -245,6 +278,7 @@ appendLine()
 readonly -f appendLine
 #debugFlagOn appendLine
 
+#description:  replaces a line by line number
 #usage:  echo something | replaceLine 4 newline
 replaceLine()
 {
@@ -280,6 +314,7 @@ replaceLine()
 readonly -f replaceLine
 #debugFlagOn replaceLine
 
+#description:  inserts a line at a given line number
 #usage:  echo something | insertLine 2 newline
 insertLine()
 {
@@ -319,6 +354,7 @@ insertLine()
 readonly -f insertLine
 #debugFlagOn insertLine
 
+#description:  removes a line by line number
 #usage: echo something | removeLine 2
 removeLine()
 {
@@ -347,6 +383,7 @@ removeLine()
 readonly -f removeLine
 #debugFlagOn removeLine
 
+#description:  prepends a specific line specified by line number
 #usage:  echo something | prependOnLine 1 prefix
 prependOnLine()
 {
@@ -370,6 +407,7 @@ prependOnLine()
 readonly -f prependOnLine
 #debugFlagOn prependOnLine
 
+#description:  appends a specific line specified by line number
 #usage:  echo something | appendOnLine 1 suffix
 appendOnLine()
 {
@@ -393,7 +431,7 @@ appendOnLine()
 readonly -f appendOnLine
 #debugFlagOn appendOnLine
 
-#is a fluent cat
+#description:  does a cat on the filename piped in. 
 #usage: echo fileName | dump
 dump()
 {
@@ -403,82 +441,3 @@ dump()
 }
 readonly -f dump
 
-
-#LENGTH ENCODING
-LENENCODER=$(getScriptPath piping/stringsUtil.js) 
-
-#description:  takes stdin, finds/replaces newlines with "_NL_" and length encodes it with a LS_length_ prefix.  the LS_ identifies it as a length-encoded string.  
-#description:		the 2nd segment provides the length.  the 3rd part is the string itself.   
-#usage: echo $data | lengthEncode (optional.  defaults to "_NL_") newLineDelim
-lengthEncode()
-{
-	local STDIN NL 
-	STDIN=$(getStdIn)
-	#NL={1:-_NL_}
-	
-	"$LENENCODER" lengthEncode < <(echo "$STDIN")
-	return 0
-	
-	#slow bash way
-	#if [[ -z "$STDIN" ]]; then
-	#	echo "LS_0_"
-	#else
-	#	local LIST EACH TEMP NLLEN LEN
-	#	IFS=$'\n' read -d '' -r -a LIST <<< "$STDIN"
-	#	for EACH in "${LIST[@]}"
-	#	do
-	#		TEMP=$(append "$EACH""$NL" < <(echo "$TEMP")) 
-	#	done
-	#	NLLEN=$(getLength < <(echo "$NL"))
-	#	TEMP=${TEMP::-"$NLLEN"}
-	#	LEN=$(getLength < <(echo "$TEMP"))
-	#	echo "LS_""$LEN""_""$TEMP"
-	#fi
-}
-readonly -f lengthEncode
-
-#usage: echo $data | lengthDencode (optional.  defaults to "_NL_") newLineDelim
-lengthDecode()
-{
-	local STDIN NL 
-	STDIN=$(getStdIn)
-	#NL={1:-_NL_}
-	
-	"$LENENCODER" lengthDecode < <(echo "$STDIN")
-	return 0
-	
-	#slow bash way
-	#if [[ -z "$STDIN" ]]; then
-	#	#don't echo anything but return success
-	#	return 0
-	#else
-	#	echo "$STDIN" | ifStartsWith "LS_" >/dev/null || return 1
-	#	
-	#	local LEN DATA
-	#	LEN=$(echo "$STDIN" | getAfter "_" | getBefore "_")
-	#	DATA=$(echo "$STDIN" | getAfter "_" | getAfter "_")
-	#	sed 's/<pattern>/<replacement>/g'
-	#	
-	#	local LIST EACH TEMP NLLEN LEN
-	#	IFS=$'\n' read -d '' -r -a LIST <<< "$STDIN"
-	#	for EACH in "${LIST[@]}"
-	#	do
-	#		TEMP=$(append "$EACH""$NL" < <(echo "$TEMP")) 
-	#	done
-	#	NLLEN=$(getLength < <(echo "$NL"))
-	#	TEMP=${TEMP::-"$NLLEN"}
-	##	echo "LS_""$LEN""_""$TEMP"
-	#fi
-}
-readonly -f lengthDecode
-
-#description: runs js logic in a sandbox
-#usage:  echo word1.word2.word3.word4 | runJS '()=>{let data=getStdInLines().join("");  let arr=data.split("."); let dump = lengthEncodeLines(arr); return dump;}'
-runJS()
-{
-	local STDIN 
-	STDIN=$(getStdIn)
-	"$LENENCODER" handle "$1" < <(echo "$STDIN")
-	return 0
-}
-readonly -f runJS

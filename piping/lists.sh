@@ -12,10 +12,10 @@ loadScript piping/strings.sh
 loadScript piping/conditionals.sh
 
 
-#retrieves an item from array by index.  where array is created by splitting stdin with supplied delimiter
+#description: retrieves an item from array by index.  where array is created by splitting stdin with supplied delimiter
 #usage: echo a b c | getArrayItem 0 #to get first, space delimiter
-#							getArrayItem -1 #to get last, space delimiter
-#							getArrayItem 0 ":" #to get first, : delimiter
+#usage:							getArrayItem -1 #to get last, space delimiter
+#usage:							getArrayItem 0 ":" #to get first, : delimiter
 getArrayItem()
 {
 	local STDIN DELIM ITEM RV LIST
@@ -40,8 +40,9 @@ getArrayItem()
 readonly -f getArrayItem
 #debugFlagOn getArrayItem
 
+#description:  parses the stdin into lines given a delimiter (or space as a default)
 #usage:  echo "a:b c:d e f" | getArrayItemsAsLines :
-#  		echo "a b c" | getArrayItemsAsLines 
+#usage:  echo "a b c" | getArrayItemsAsLines 
 getArrayItemsAsLines()
 {
 	local STDIN DELIM ITEM RV LIST EACH
@@ -69,8 +70,9 @@ getArrayItemsAsLines()
 readonly -f getArrayItemsAsLines
 #debugFlagOn getArrayItemsAsLines
 
+#description:  parses stdin to array and returns the first item
 #usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
-#							getFirstArrayItem :	#to get next, : delimiter
+#usage:				 getFirstArrayItem :	#to get next, : delimiter
 getFirstArrayItem()
 {
 	local STDIN
@@ -82,8 +84,9 @@ getFirstArrayItem()
 readonly -f getFirstArrayItem
 #debugFlagOn getFirstArrayItem
 
+#description:  parses stdin to array and returns everything after the first item
 #usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
-#							getFirstArrayItem :	#to get next, : delimiter
+#usage:				 getFirstArrayItem :	#to get next, : delimiter
 getFirstArrayItemRemainder()
 {
 	local STDIN ITEM ITEMLEN DELIMLEN LEN REM RV
@@ -112,7 +115,7 @@ getFirstArrayItemRemainder()
 readonly -f getFirstArrayItemRemainder
 #debugFlagOn getFirstArrayItemRemainder
 
-#splits stdin into an array (using $1 as the delim) and then performs a function ($2+) on each item (piped into the function)
+#description:  splits stdin into an array (using $1 as the delim) and then performs a function ($2+) on each item (piped into the function)
 #usage:  echo "a:b c:d e f" | doEach : echo 
 doEach()
 {
@@ -146,7 +149,7 @@ doEach()
 readonly -f doEach
 #debugFlagOn doEach
 
-#reads stdin as lines and then performs a function ($2+) on each item (piped into the function)
+#description:  reads stdin as lines and then performs a function ($2+) on each item (piped into the function)
 #usage:  echo $manylines | doEachLine echo 
 doEachLine()
 {
@@ -168,10 +171,8 @@ doEachLine()
 readonly -f doEachLine
 #debugFlagOn doEachLine
 
-#appends stdin to the provided file arg.  
-#while this is a trivial operation to do in shell with redirection, having a helper function is useful during
-#piped list iteration
-#usage:  echo something | doEach , appendToFile fileName
+#description: appends stdin to the provided file arg.  useful during piped list iteration
+#usage:  echo someList | doEach , appendToFile fileName
 appendToFile()
 {
 	local STDIN FILE
@@ -186,7 +187,7 @@ appendToFile()
 readonly -f appendToFile
 #debugFlagOn appendToFile
 
-#joins two lists together of the same length, side by side
+#description: joins two lists together of the same length, side by side
 #usage:  echo mylist | sideJoinLists myotherlistVarName joinString 
 sideJoinLists()
 {

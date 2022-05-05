@@ -141,6 +141,7 @@ getAllScriptFunctions()
 readonly -f getAllScriptFunctions
 #debugFlagOn getAllScriptFunctions
 
+#description: looks for all functions that have "description" and "usage" header comments
 #usage:  echo scriptPartialName | getScriptFunctions
 getScriptFunctions()
 {

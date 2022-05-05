@@ -31,8 +31,8 @@ TESTCASE 'abc | getStdIn = abc'
 	[ "$(echo "abc" | getStdIn)" == "abc" ]
 	RESULT
 
-TESTCASE 'pipeTo a cat | getStdIn = a'
-	[ "$(pipeTo a cat | getStdIn)" == "a" ]
+TESTCASE 'pipeFirstArgToRemainder a cat | getStdIn = a'
+	[ "$(pipeFirstArgToRemainder a cat | getStdIn)" == "a" ]
 	RESULT
 
 job()
@@ -50,10 +50,10 @@ backgroundjob()
 }
 #debugFlagOn backgroundjob 
 
-TESTCASE 'abc | doJob job 2 3 = abc'
-	[ "$(echo "abc" | doJob job 2 3 )" == "abc" ]
+TESTCASE 'abc | doFlowThruCall job 2 3 = abc'
+	[ "$(echo "abc" | doFlowThruCall job 2 3 )" == "abc" ]
 	RESULT
 
-TESTCASE 'abc | doBackgroundJob backgroundjob 2 3 = abc'
-	[ "$(echo "abc" | doBackgroundJob backgroundjob 2 3 )" == "abc" ]
+TESTCASE 'abc | doBackgroundFlowThruCall backgroundjob 2 3 = abc'
+	[ "$(echo "abc" | doBackgroundFlowThruCall backgroundjob 2 3 )" == "abc" ]
 	RESULT
