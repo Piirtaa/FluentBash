@@ -2,29 +2,29 @@
 
 /*this script provides a key-values (note the plurality) data structure that also supports parent-child keys.
  * -all mutations are append only.
- *   -there are 2 mutations.  add.  remove.
- *   -remove mutations can be specific to a single add entry, or they can apply to any entries in the parent-child tree. 
- *   	-to specify a specific removal both key and data need to be provided.
+ * 	-there are 2 mutations.  add.  remove.
+ * 	-remove mutations can be specific to a single add entry, or they can apply to any entries in the parent-child tree. 
+ *   		-to specify a specific removal both key and data need to be provided.
  * 		-to specify a tree removal only key is provided. 
  * -the net state of the graph is calculated by walking the structure and applying any remove entries to existing add entries.  this is called "emerging". 
  * -the data can be queried for text matches
  * -each entry is a single line in the datagram.
  * -all operations are fluent (meaning the gram is sent in via stdin, and returned via stdout) with the exceptions of the operations "format" and "getExactValues"
- * 	 -this avails chaining a series of mutations together in one line.
+ * 	-this avails chaining a series of mutations together in one line.
  * -the typical usage pattern for reading data would be a 2 step operation.  emerge -> format
  * -data can be multiline.  it is encoded to be one line.  
  * 
  * 
  * the design drivers for this data structure were:
- *   -reducing the complexity problems around graph mutation particularly under multi-threaded load.  the critical section is the end of the file only.
+ * 	-reducing the complexity problems around graph mutation particularly under multi-threaded load.  the critical section is the end of the file only.
  * 		and it is only critical when mutations have the exact same key.  otherwise there is no functional difference in mutation sequence.
- *   -append-only.  this ensures that the state of a given graph can be easily tested for deltas.  if the gram is longer, a change has happened.  there is only 
+ *	-append-only.  this ensures that the state of a given graph can be easily tested for deltas.  if the gram is longer, a change has happened.  there is only 
  * 		one place to look for changes in the data structure - the end of the file.
  * 	 -nesting keys.  data that is organized under a single umbrella can be more easily parsed.  this also fits the "append-only" ethos.  newly added data
  * 		has the longest keys in the path.  there is an inherent sequencing to the data.
- *   -having somewhat performant string operations in shell.  bash is notoriously slow for this.  
- *   -observability of changes is easy.
- *   -checks against data corruption in the graph.  all entries have length metadata.  this means that the parsing of key and value is an exact instruction.  
+ * 	-having somewhat performant string operations in shell.  bash is notoriously slow for this.  
+ * 	-observability of changes is easy.
+ *   	-checks against data corruption in the graph.  all entries have length metadata.  this means that the parsing of key and value is an exact instruction.  
  * 		there is no room for ambiguity.  there are no steps in the flow of parsing where corruption can happen.
  * 		-additional data corruption checks can be applied to the graph with trivial effort.  adding checksums, etc. would be the introduction of another length-delimited
  * 			item on the entry line.  thus this data structure is easily "decoratable". 
