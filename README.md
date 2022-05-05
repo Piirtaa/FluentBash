@@ -18,21 +18,35 @@ Features:
 		| appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile ; cat tempFile 
 		| doEachLine ifStartsWith good | appendToFile goodFile ; rm tempFile" 
 	
-	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell (and sub-shell) instances.  
+	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell
+	(and sub-shell) instances.  
 		Eg. "setKV myKey myValue" ; getKV myKey"  
 
 	Variable store that allows variables to be easily shared between shells.   
-		Eg.  " BOB='bob'; shareVar myExportedVarsFile BOB ; doUpdate myExportedVarsFile ; unshareVar myExportedVarsFile BOB"
+		Eg.  " BOB='bob'; shareVar myExportedVarsFile BOB ; doUpdate myExportedVarsFile ; 
+		unshareVar myExportedVarsFile BOB"
 		
-	Reactive programming allowing event-driven logic to be constructed which is persistent, and which can be chained together to create complex workflows.  Eg.  initStepA(){...} stepATriggerEvent(){...} doStepA(){...} ; createTrigger stepA stepATriggerEvent | doBeforeTrigger initStepA | doAfterTrigger doStepA ; activateTrigger stepA myPollingInterval ;
+	Reactive programming allowing event-driven logic to be constructed which is persistent, and which can be 
+	chained together to create complex workflows.  
+		Eg.  initStepA(){...} stepATriggerEvent(){...} doStepA(){...} ; createTrigger stepA stepATriggerEvent
+		| doBeforeTrigger initStepA | doAfterTrigger doStepA ; activateTrigger stepA myPollingInterval ;
 	
-	Fluent validation of function signatures, decoupled from function.  For example, this is useful if we need to inject additional validation strategies into externally provided logic. Eg. addThreeNumbers(){...} ; createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 | addParameter arg3 3 false 0 | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15 ; validateSig addThreeNumbers 1 11 15 ;
+	Fluent validation of function signatures, decoupled from function.  For example, this is useful if we need
+	to inject additional validation strategies into externally provided logic. 
+		Eg. addThreeNumbers(){...} ; createSig addThreeNumbers | addParameter arg1 1 false 0 | 
+		addParameter arg2 2 false 0 | addParameter arg3 3 false 0 | addParamValidator arg1 isNumeric | 
+		addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric | addParamValidator arg1 isLessThan 10 
+		| addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 
+		| addParamValidator arg3 isGreaterThanOrEqual 15 ; validateSig addThreeNumbers 1 11 15 ;
 	
-	A bunch of systems stuff for programmatically spinning up sockets, http servers, hotspots, port knocking logic, etc.  Too many to summarize quickly.  Look in the sockets, http, hotspot and recipes folders for examples.
+	A bunch of systems stuff for programmatically spinning up sockets, http servers, hotspots, 
+	port knocking logic, etc.  Too many to summarize quickly.  Look in the sockets, http, hotspot
+	and recipes folders for examples.
 	
 	X-automation including automation of firefox, webscraping, etc.
 	
-	A process-shim framework for intercepting stdin/stdout of a process so that it can be more easily managed.  For example, this allows javascript engines to be REPL-ized such that they can be talked to via shell commands.
+	A process-shim framework for intercepting stdin/stdout of a process so that it can be more easily managed.
+	For example, this allows javascript engines to be REPL-ized such that they can be talked to via shell commands.
 	
 	A javascript sandbox for executing standalone js.  A javascript REPL.
 
@@ -40,7 +54,8 @@ See the various Test scripts for example usage.
 
 -------------
 
-To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root directory as FluentBash.
+To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root 
+directory as FluentBash.
 
 Load loader first
 
@@ -92,9 +107,11 @@ LISTS
 
 	[ "$(echo "a,b,c" | getArrayItem 0 ,)" == "a" ]
 
-	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp | touch derp; cat derp  | getLine 1 ; rm derp )" == "A dog" ]
+	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp | touch derp; cat derp  | getLine 1 ;
+	rm derp )" == "A dog" ]
 
-	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  | getLine 2 ; rm derp )" == "A cat" ]
+	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  
+	| getLine 2 ; rm derp )" == "A cat" ]
 
 CONDITIONALS
 
@@ -157,7 +174,8 @@ TRIGGERS
 	
 	#define a series of steps.  
 	#	each step has 3 parts:  before trigger fires logic; the trigger; after trigger fires logic.  
-	#	the trigger itself is polled.  each step is persisted as a file in a "unitOfWork" datagram which encapsulates its logic
+	#	the trigger itself is polled.  each step is persisted as a file in a "unitOfWork" datagram
+	which encapsulates its logic
 	#		so that it can be exported across machine boundary.
 	#	triggers can be chained together.  thus a chain of reactive logic can be created somewhat fluently.
 	touch testFile
