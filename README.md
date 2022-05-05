@@ -7,13 +7,17 @@ Features:
 	
 	Dependency loading.  
 	
-	Fluent string and list mutation.  Eg.  "echo line1 | appendLine line2 | appendLine line3 | prependLine line0 | replaceLine 1 line0a | removeLine 2 | insertLine 2 line2redux | ifNumberOfLinesGreaterThan 4 | doEachLine ifStartsWith line | appendToFile myFile | getLine 2" 
+	Fluent string and list mutation.  
+		Eg.  "echo line1 | appendLine line2 | appendLine line3 | prependLine line0 | replaceLine 1 line0a | removeLine 2 | insertLine 2 line2redux | ifNumberOfLinesGreaterThan 4 | doEachLine ifStartsWith line | appendToFile myFile | getLine 2" 
 
-	Fluent tests/conditionals, availing a pattern of "echo $data | filter1 | filter2 | filter3" which allows things like validating data as you construct it, filtering lists, stashing and recalling data during iteration.  Eg.  "echo goodLine1 | appendLine goodLine2 | appendLine badLine | appendLine goodLine3 | appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile ; cat tempFile | doEachLine ifStartsWith good | appendToFile goodFile ; rm tempFile" 
+	Fluent tests/conditionals, availing a pattern of "echo $data | filter1 | filter2 | filter3" which allows things like validating data as you construct it, filtering lists, stashing and recalling data during iteration.  
+		Eg.  "echo goodLine1 | appendLine goodLine2 | appendLine badLine | appendLine goodLine3 | appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile ; cat tempFile | doEachLine ifStartsWith good | appendToFile goodFile ; rm tempFile" 
 	
-	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell (and sub-shell) instances.  Eg. "setKV myKey myValue" ; getKV myKey"  
+	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell (and sub-shell) instances.  
+		Eg. "setKV myKey myValue" ; getKV myKey"  
 
-	Variable store that allows variables to be easily shared between shells.   Eg.  " BOB='bob'; shareVar myExportedVarsFile BOB ; doUpdate myExportedVarsFile ; unshareVar myExportedVarsFile BOB"
+	Variable store that allows variables to be easily shared between shells.   
+		Eg.  " BOB='bob'; shareVar myExportedVarsFile BOB ; doUpdate myExportedVarsFile ; unshareVar myExportedVarsFile BOB"
 		
 	Reactive programming allowing event-driven logic to be constructed which is persistent, and which can be chained together to create complex workflows.  Eg.  initStepA(){...} stepATriggerEvent(){...} doStepA(){...} ; createTrigger stepA stepATriggerEvent | doBeforeTrigger initStepA | doAfterTrigger doStepA ; activateTrigger stepA myPollingInterval ;
 	
