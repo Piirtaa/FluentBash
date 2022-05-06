@@ -17,7 +17,7 @@ Features:
 	things like validating data as you construct it, filtering lists, stashing and recalling data during iteration.  
 		
 		Eg.  "echo goodLine1 | appendLine goodLine2 | appendLine badLine | appendLine goodLine3 
-		| appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile ; cat tempFile 
+		| appendToFile tempFile | doEachLine ifStartsWith bad | appendToFile badFile > /dev/null; cat tempFile 
 		| doEachLine ifStartsWith good | appendToFile goodFile ; rm tempFile" 
 	
 	In-memory key-value store (written entirely in Bash) that that allows data to be persisted across shell
