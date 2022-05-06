@@ -7,6 +7,8 @@ Features:
 	
 	Dependency loading.  
 	
+		Eg. loadScript piping/strings.sh
+		
 	Fluent string and list mutation.  
 		
 		Eg.  "echo line1 | appendLine line2 | appendLine line3 | prependLine line0 | replaceLine 1 line0a
