@@ -16,17 +16,64 @@ var loadLibrary = function(pathToLib)
 loadLibrary("../jsSandbox/sandboxLib.js")
 
 //define read and print strategies for the repl
-var readStrategy = function()
+var defaultReadStrategy = function()
 {
 	return readline();
 }
 
+var leReadStrategy = function()
+{
+	var line = defaultReadStrategy();
+	var actualLine;
+	
+	//is length encoded? 
+	if(lengthEncoder.isIndicated(line))
+	{
+		//is it fully read?
+		if(lengthEncoder.isValid(line))
+		{
+			actualLine=lengthEncoder.getValue(line);
+		}
+		else
+		{
+			//read until we get the full length, within a timeout window
+			var totalLine = line;
+			var len = lengthEncoder.getExpectedLength(line);
+			
+			//set the timeout as a function of data size
+			var timeoutFn = (size)=>{
+				let msPer10000 = 1000;
+				return size * msPer10000;
+			};
+			var expireDate = Date.now() + timeoutFn(len);
+			
+			while(expireDate > Date.now())
+			{
+				line = defaultReadStrategy();
+				totalLine+=line;
+				if(lengthEncoder.isValid(totalLine))
+				{
+					//we have the full text now
+					actualLine = lengthEncoder.getValue(totalLine);
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		actualLine = line;
+	}
+
+	return actualLine;
+}
+				
 var defaultPrintStrategy = function(obj)
 {
 	print(String(obj));
 }
 
-var lengthEncodedPrintStrategy = function(obj)
+var lePrintStrategy = function(obj)
 {
 	print(lengthEncoder.encode(String(obj)));
 }
@@ -41,9 +88,9 @@ var printHelp = function()
 	print("usage: ./sandbox_spidermonkey.js repl");
 	print("  starts a repl instance.");
 	print("usage: ./sandbox_spidermonkey.js repl le");
-	print("  starts a repl instance with a length-encoded response.");
+	print("  starts a repl instance with length-encoding.");
 	print(" ");
-	print("	 additional notes:");
+	print("additional repl notes:");
 	print("  send '_exit_' to close.");
 	print("  prefix request with '_echo_' to echo the input.");
 	print("  prefix request with '_silent_' to print no results.");
@@ -64,11 +111,11 @@ else
 		case "repl":
 			if (scriptArgs[1] == "le")
 			{
-				__sandbox.startRepl(readStrategy, lengthEncodedPrintStrategy);
+				__sandbox.startRepl(leReadStrategy, lePrintStrategy);
 			}
 			else
 			{
-				__sandbox.startRepl(readStrategy, defaultPrintStrategy);
+				__sandbox.startRepl(defaultReadStrategy, defaultPrintStrategy);
 			}
 			break;
 		case "piped":

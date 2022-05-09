@@ -552,77 +552,39 @@ const __sandbox = (function(){
 			
 			while (true) {
 				var line = readLineStrategy();
-				var actualLine;
-				
-				//special consideration for length encoded text.  
-				//is length encoded? 
-				if(lengthEncoder.isIndicated(line))
-				{
-					//is it fully read?
-					if(lengthEncoder.isValid(line))
-					{
-						actualLine=lengthEncoder.getValue(line);
-					}
-					else
-					{
-						//read until we get the full length, within a timeout window
-						var totalLine = lengthEncoder.getValue(line);
-						var len = lengthEncoder.getExpectedLength(line);
-						var timeoutFn = (size)=>{
-							let msPer10000 = 1000;
-							return size * msPer10000;
-						};
-						var expireDate = Date.now() + timeoutFn(len);
-						while(expireDate > Date.now())
-						{
-							line = readLineStrategy();
-							totalLine+=line;
-							if(totalLine.length == len)
-							{	
-								//we have the full text now
-								actualLine = totalLine;
-								break;
-							}
-						}
-					}
-				}
-				else
-				{
-					actualLine = line;
-				}
 
 				//don't process if we don't have a line
-				if(jsMeta.isNullOrUndefined(actualLine))
+				if(jsMeta.isNullOrUndefined(line))
 					continue;
 										
 				//now we parse out any prefixes that are "special instructions"
 				//exit
-				if(actualLine == _replExitLine)
+				if(line == _replExitLine)
 				{
 					printLineStrategy("exiting");
 					break;
 				}
 					
 				//echo
-				if(actualLine.startsWith(_replEchoPrefix))
+				if(line.startsWith(_replEchoPrefix))
 				{
-					actualLine=actualLine.getAfter(_replEchoPrefix);
-					printLineStrategy(actualLine);
+					line=line.getAfter(_replEchoPrefix);
+					printLineStrategy(line);
 					continue;
 				}
 			
 				//silent (ie. no printing of the result)
 				var isSilent=false;
-				if(actualLine.startsWith(_replSilentPrefix))
+				if(line.startsWith(_replSilentPrefix))
 				{
-					actualLine=actualLine.getAfter(_replSilentPrefix);
+					line=line.getAfter(_replSilentPrefix);
 					isSilent=true;
 				}
 				
 				//execute the instruction
 				try{
 					//execute	
-					var result=__evaluator.evaluate(actualLine);
+					var result=__evaluator.evaluate(line);
 					
 					if(isSilent)
 						continue;
@@ -631,7 +593,7 @@ const __sandbox = (function(){
 					printLineStrategy(result);
 				}catch(e)
 				{
-					printLineStrategy("error on line:" + actualLine);
+					printLineStrategy("error on line:" + line);
 					printLineStrategy(e);
 					continue;
 				}

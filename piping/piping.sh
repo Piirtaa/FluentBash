@@ -55,6 +55,23 @@ isUserDefinedFunction()
 }
 readonly -f isUserDefinedFunction
 
+#description: sets a variable from stdin
+#usage: echo data | setVar myVar
+setVar()
+{
+	local STDIN VAR
+	STDIN=$(getStdIn)
+	VAR="$1"
+	if [[ -z "$VAR" ]]; then
+		#invalid
+		return 1
+	fi
+	
+	eval "$VAR"="$STDIN"
+	return 0
+}
+readonly -f setVar
+#debugFlagOn setVar
 
 #description: helper function to dynamically execute some stuff 
 #usage: echo $somedata | makeCall myCmd arg1 arg2
@@ -179,3 +196,4 @@ stdInAsLastArg()
 }
 readonly -f stdInAsLastArg
 #debugFlagOn stdInAsLastArg
+

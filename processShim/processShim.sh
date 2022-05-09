@@ -27,6 +27,22 @@ logShim()
 	echo "$STDIN" >> "$LOGFILE"
 }
 
+#description:  dumps the log
+#usage: getShimLog name 
+getShimLog()
+{
+	local NAME LOGFILE 
+	NAME="$1"
+	if [[ -z "$NAME" ]]; then
+		echo "no name provided"
+		return 1
+	fi
+	STDIN=$(getStdIn)
+	LOGFILE="$NAME"".log"
+	cat "$LOGFILE"
+}
+
+
 #description:  starts a Shim.  
 #usage:  startShim name commandToRun 
 startShim()
@@ -56,6 +72,12 @@ startShim()
 
 	logShim "$NAME" < <(echo "CMD=""$CMD" )
 	logShim "$NAME" < <(echo "CMD_PID=""$CMD_PID" )
+
+	#now validate that this process still exists
+	if [[ -z $(ps -aux | grep "$CMD_PID") ]] ; then
+		logShim "$NAME" < <(echo "CMD is not running error")
+	fi
+
 	
 	#keep the pipe open indefinitely
 	local INPIPE_HOLD_PID	
@@ -103,9 +125,41 @@ EOF
 }
 readonly -f startShim
 
+#description: sends commands to the Shim but doesn't try to read the response  
+#usage:  echo 'adafadsf' | callShimWithoutRead name 
+callShimWithoutRead()
+{
+	local NAME
+	NAME="$1"
+	if [[ -z "$NAME" ]]; then
+		echo "no name provided"
+		return 1
+	fi
+	shift
+	
+	local IN_PIPE 
+	IN_PIPE="$NAME""IN"
+	
+	if [ ! -p "$IN_PIPE" ]; then
+		echo "invalid in pipe"
+		return 1
+	fi	
+	
+	local STDIN 
+	STDIN=$(getStdIn)
+
+	logShim "$NAME" < <(echo "INPUT=""$STDIN" )
+
+	#make the call
+	echo "$STDIN" > "$IN_PIPE"
+	
+	return 0	
+
+}
+readonly -f callShimWithoutRead
+
 #description: sends commands to the Shim.  
 #usage:  echo 'adafadsf' | callShim name isCompleteTest testArg1 testArg2..
-#if the "silent" argument is provided the Shim will not return a response 
 callShim()
 {
 	local NAME
@@ -132,6 +186,12 @@ callShim()
 
 	#make the call
 	echo "$STDIN" > "$IN_PIPE"
+	
+	#exec 5<>"$IN_PIPE" 3>"$IN_PIPE" 4<"$IN_PIPE" 5>&-
+	#cat - >&3
+	#echo "$STDIN" >&3
+	#exec 3>&-  
+	#exec 4<&-
 	
 	#get the response
 	local OUTPUT 

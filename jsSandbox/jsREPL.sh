@@ -3,36 +3,35 @@
 #tags: javascript sandbox spidermonkey engine processShim shim js repl
 
 #load dependencies.  
-loadScript processShim/processShim.sh
-SANDBOX=$(getScriptPath jsSandbox/sandbox_spidermonkey.js) 
+loadScript jsWrapper/jsWrapper.sh
 
 #the command switches
 STDIN=$(getStdIn)
 
 case "$1" in
 	start)
-			startShim "$2" repl
+			initREPL "$2"
 			;;
 	startLE)
-			startShim "$2" repl le
+			initLEREPL "$2"
 			;;
 	stop)
-			stopShim "$2"
+			disposeREPL "$2"
 			;;
 	getHistory)
-			cat "$2".log
+			getREPLHistory "$2"
 			;;
 	run)
-			callShim "$2" < <(echo "$STDIN")
+			callREPL "$2" < <(echo "$STDIN")
 			;;
 	runSilent)
-			callShim "$2" < <(echo "_silent_""$STDIN") > /dev/null
+			silentCall "$2" < <(echo "$STDIN")
 			;;
 	quit)
-			callShim "$2" < <(echo "_exit_")
+			exitCall "$2"
 			;;
 	echo)
-			callShim "$2" < <(echo "_echo_""$STDIN")
+			echoCall "$2" < <(echo "$STDIN")
 			;;
 	*)
 			args=( "start" "startLE" "stop" "getHistory"  "run"  "runSilent"  "quit"  "echo" )
