@@ -86,7 +86,7 @@ getAllScriptsAndTags()
 	local TAGLIST=$(echo "$LIST" | doEachLine dump | grep '^#tags' | doEachLine getSubstring 6)
 
 	#we probably want some join and split going on here
-	echo "$LIST" | joinLists TAGLIST "  ===>  "
+	echo "$LIST" | sideJoinLists TAGLIST "  ===>  "
 }
 readonly -f getAllScriptsAndTags
 #debugFlagOn getAllScriptsAndTags

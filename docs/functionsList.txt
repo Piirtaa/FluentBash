@@ -1,0 +1,674 @@
+#description:  finds all scripts (name ends in .sh,  has a shebang)
+#usage:  getAllScripts 
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  getAllScripts()
+
+#description:  does the file have fluentBash meta information
+#usage: echo myfile | hasScriptMeta
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  hasScriptMeta()	
+
+#description:  finds all scripts that have fluentBash meta information
+#usage: getAllScriptsWithMeta
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  getAllScriptsWithMeta()
+
+#description:  gets a list of all files and their meta tags
+#usage: getAllScriptsAndTags
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  getAllScriptsAndTags()
+
+#description:  returns which files have the provided tag
+#usage:  echo myTag | whereIsTag
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  whereIsTag()
+
+#description: returns all of the functions every script has
+#usage: getAllScriptFunctions
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  getAllScriptFunctions()
+
+#description: looks for all functions that have "description" and "usage" header comments
+#usage:  echo scriptPartialName | getScriptFunctions
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  getScriptFunctions()
+
+#description:  returns which file defines the function
+#usage:  echo myFunction | whereIsFunction
+/home/pentoo/me/FluentBash/core/../core/meta.sh  ===>  whereIsFunction()
+
+#description:  determines the session type of the first login session
+#usage:  getFirstSessionType
+/home/pentoo/me/FluentBash/core/../automation/x11automation.sh  ===>  getFirstSessionType()
+
+#description:  determines if x11 session
+#usage:   isX11 || kack
+/home/pentoo/me/FluentBash/core/../automation/x11automation.sh  ===>  isX11()
+
+#description:  activates window by window id
+#usage:  getVisibleFirefoxWID | activateWID
+/home/pentoo/me/FluentBash/core/../automation/x11automation.sh  ===>  activateWID()
+
+#description: focuses on the address bar
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_focusAddress()
+
+#description: starts the search dialog
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_searchFor()
+
+#description: opens page inspect
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_openPageInspect()
+
+#description: closes page inspect
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_closePageInspect()
+
+#description: enters page inspect, searches for an element by id, focuses on it, exits page inspect
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_findElementById()
+
+#description: opens a new tab
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_newTab()
+
+#description: opens the console dialog
+#usage:
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_openConsole()
+
+#description: creates a new tab and enters the js console we can interact with if we want to run some js in a REPL, but don't want the overhead of node.js 
+#usage: ff_getVisibleWID | activateWID ; ff_newJSREPL
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_newJSREPL()
+
+#description: creates a sandbox for code to run
+#usage: ff_createSandbox jsFile 
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_createSandbox()
+
+#description: runs js and outputs the results to stdout
+#usage: ff_runInSandbox jsFile command
+/home/pentoo/me/FluentBash/core/../automation/firefox.sh  ===>  ff_runInSandbox()
+
+#description: searches google via ff automation
+#usage:  searchGoogle query words
+/home/pentoo/me/FluentBash/core/../automation/queryGoogle.sh  ===>  searchGoogle()
+
+#description:  returns a list of urls that aren't in the google domain
+#usage:  cat dumpfile | parseSearchResultUrls
+/home/pentoo/me/FluentBash/core/../automation/queryGoogle.sh  ===>  parseSearchResultUrls()
+
+#description:  given an attribute name, extracts the value.  eg. .... myAttr="xyz" ....
+#usage:  echo $html | extractAttributeValues myAttr
+/home/pentoo/me/FluentBash/core/../automation/scraping.sh  ===>  extractAttributeValues()
+
+#description:  parses urls
+#usage:  echo $html | extractURLS 
+/home/pentoo/me/FluentBash/core/../automation/scraping.sh  ===>  extractURLS()
+
+#description:  disables an open rc service, also allows for masking 
+#usage:  disableOpenRCService myServiceName runLevel maskFlag
+#usage:											^^eg.  NetworkManager
+#usage:														^^eg. default (this is the default)
+#usage:															  		^^providing maskFlag this will ensure it cannot start
+/home/pentoo/me/FluentBash/core/../openRC/openRC.sh  ===>  disableOpenRCService()
+
+#description:  enables an open rc service.  removes any masking
+#usage:  enableOpenRCService myServiceName runLevel 
+#usage:											^^eg.  NetworkManager
+#usage:														^^eg. default (this is the default)
+/home/pentoo/me/FluentBash/core/../openRC/openRC.sh  ===>  enableOpenRCService()
+
+#description:  gets run state of an open rc service.
+#usage:  getOpenRCServiceStatus myServiceName  
+/home/pentoo/me/FluentBash/core/../openRC/openRC.sh  ===>  getOpenRCServiceStatus()
+
+#description:  gets run level of an open rc service.
+#usage:  getOpenRCServiceRunLevel myServiceName  
+/home/pentoo/me/FluentBash/core/../openRC/openRC.sh  ===>  getOpenRCServiceRunLevel()
+
+#description:  writes to the HS_UOW log
+#usage:  echo msg | HS_UOWLog
+/home/pentoo/me/FluentBash/core/../hotspot/hotspotUoW.sh  ===>  HS_UOWLog()
+
+#description:  tests a key for unrelatedness and updates the keyline
+#usage:  echo "$GRAM" | _updateKeyPath keyPath
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  #_updateKeyPath()
+
+#description:  constructs an add entry
+#usage:  _buildEntry op keyPath data
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  _buildEntry()
+
+#description:  add dataline
+#usage:  echo $gram | addData keyPath data
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  addData()
+
+#description:  remove dataline
+#usage:  echo $gram | removeData keyPath 
+#usage:  echo $gram | removeData keyPath data
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  removeData()
+
+#description:  converts datagram to 3 equal length arrays of key, data, and op
+#usage:  bookToArrays  keyArrayName dataArrayName opArrayName pathStartsWith <<< $gram
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  bookToArrays()
+
+#description:  creates book datagram from 3 equal length arrays of key, data, and op
+#usage:  arraysToBook  keyArrayName dataArrayName opArrayName 
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  arraysToBook()
+
+#description:  queries datagram.  returns subset of datagram where query is contained in either path or data
+#usage:  echo $gram | queryBook searchterm searchterm 
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  queryBook()
+
+#description:  emergeBooks entities.  walks gram and summarizes all add/removes into a set of keys under a given keypath
+#usage:  echo $gram | emergeBook (optional) keyPath 
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  emergeBook()
+
+#description:  dumps the contents of an array
+#usage:  dumpArray varName
+/home/pentoo/me/FluentBash/core/../book/bookGram.sh  ===>  dumpArray()
+
+#description:  validates not empty
+#usage: isNotEmpty someArg
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isNotEmpty()
+
+#description:  validates numeric
+#usage: isNumeric someArg
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isNumeric()
+
+#description:  validates alpha numeric
+#usage: isAlphaNumeric someArg
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isAlphaNumeric()
+
+#description:  validates alpha numeric
+#usage: contains lookingFor lookingIn
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  contains()
+
+#description:  validates less than
+#usage: isLessThan 10
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isLessThan()
+
+#description:  validates less than or equal
+#usage: isLessThanOrEqual 10
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isLessThanOrEqual()
+
+#description:  validates greater than
+#usage: isGreaterThan 10
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isGreaterThan()
+
+#description:  validates greater than or equal
+#usage: isGreaterThanOrEqual 10
+/home/pentoo/me/FluentBash/core/../validation/validators.sh  ===>  isGreaterThanOrEqual()
+
+#description: creates a parameters datagram, and saves it as a functionName".params" file where it is defined
+#usage: createSig functionName
+/home/pentoo/me/FluentBash/core/../validation/functionSig.sh  ===>  createSig()
+
+#description: defines a parameter
+#usage: echo "$SIG" | addParameter name position isOptional defaultValue 
+/home/pentoo/me/FluentBash/core/../validation/functionSig.sh  ===>  addParameter()
+
+#description: creates a signature validator
+#usage: addSigValidator function args
+/home/pentoo/me/FluentBash/core/../validation/functionSig.sh  ===>  addSigValidator()
+
+#description: creates a signature validator
+#usage: addParamValidator paramName function args.  NOTE!!:  the LAST arg into the function call MUST be the param value
+/home/pentoo/me/FluentBash/core/../validation/functionSig.sh  ===>  addParamValidator()
+
+#description: creates a signature validator
+#usage: validateSig functionName args
+/home/pentoo/me/FluentBash/core/../validation/functionSig.sh  ===>  validateSig()
+
+#description:  a function that does nothing
+#usage:  emptyFn
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  emptyFn()
+
+#description: creates a trigger uow, writing a trigger file (a uow file) with the provided name (arg 1)
+#usage:  createTrigger name triggerFn beforeFn afterFn
+#usage:  			eg.	myName myTrigger emptyFn doSomethingAfter
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  createTrigger()
+
+#description:  sets the action after the trigger fires
+#usage:  echo triggerFileName | doAfterTrigger myfunction args 
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  doAfterTrigger()
+
+#description:  sets the action after the trigger fires
+#usage:  echo triggerFileName | doBeforeTrigger myfunction args 
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  doBeforeTrigger()
+
+#description: chains triggers together such that when the first completes the second is activated
+#usage:	chainTriggers firstTriggerName secondTriggerName pollingSecs
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  chainTriggers()
+
+#description: activates a trigger
+#usage:	activateTrigger myName pollingSecs
+/home/pentoo/me/FluentBash/core/../unitOfWork/trigger.sh  ===>  activateTrigger()
+
+#description returns an empty uow datagram
+#usage:  UOW=$(workCreate)
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workCreate()
+
+#description:  adds a variable to the gram
+#usage: varName=value; echo $GRAM | workSetVar varName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetVar()
+
+#description:  loads a variable in current scope from the gram. 
+#usage: workEmergeVar varName <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeVar()
+
+#description:  loads all vars in current scope from the gram. 
+#usage: workEmergeAllVars <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeAllVars()
+
+#description:  persists all vars in current scope back to the gram. 
+#usage: GRAM=$(echo "$GRAM" | workPersistAllVars)
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workPersistAllVars()
+
+#description:  adds a file to the gram
+#usage: echo $GRAM | workSetFile fileName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetFile()
+
+#description:  writes a file from the gram
+#usage: workEmergeFile fileName <<< "$GRAM"
+#usage: echo "$GRAM" | workEmergeFile fileName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeFile()
+
+#description:  writes all files registered with the gram
+#usage: workEmergeAllFiles <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeAllFiles()
+
+#description:  writes all files back to the gram
+#usage: GRAM=$(echo "$GRAM" | workPersistAllFiles) 
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workPersistAllFiles()
+
+#description:  removes all files registered with the gram
+#usage: workRemoveAllFiles <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workRemoveAllFiles()
+
+#description:  add a function to the gram
+#usage:  echo $GRAM | workSetFunction fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetFunction()
+
+#description:  creates/sets a function in current scope from the gram
+#usage: workEmergeFunction fnName <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeFunction()
+
+#description:  loads all functions in current scope from the gram. 
+#usage: workEmergeAllFunctions <<< "$GRAM"
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workEmergeAllFunctions()
+
+#description:  changes the state of the gram to the next slot
+#usage:	echo $GRAM | workChangeState expectedCurrent
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workChangeState()
+
+#description:  add init function to the gram
+#usage:  echo $GRAM | workSetInitStrategy fnName arg1 arg2
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetInitStrategy()
+
+#description:  add start function to the gram
+#usage:  echo $GRAM | workSetStartStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetStartStrategy()
+
+#description:  add stop function to the gram
+#usage:  echo $GRAM | workSetStopStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetStopStrategy()
+
+#description:  add dispose function to the gram
+#usage:  echo $GRAM | workSetDisposeStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetDisposeStrategy()
+
+#description:  add canInit function to the gram
+#usage:  echo $GRAM | workAddCanInitStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workAddCanInitStrategy()
+
+#description:  add canStart function to the gram
+#usage:  echo $GRAM | workAddCanStartStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workAddCanStartStrategy()
+
+#description:  add canStop function to the gram
+#usage:  echo $GRAM | workAddCanStopStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workAddCanStopStrategy()
+
+#description:  add canDispose function to the gram
+#usage:  echo $GRAM | workAddCanDisposeStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workAddCanDisposeStrategy()
+
+#description:  add start trigger to the gram
+#usage:  echo $GRAM | workSetStartTriggerStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetStartTriggerStrategy()
+
+#description:  add stop trigger to the gram
+#usage:  echo $GRAM | workSetStopTriggerStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetStopTriggerStrategy()
+
+#description:  add polling strategy to the gram
+#usage:  echo $GRAM | workSetPollingStrategy fnName
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workSetPollingStrategy()
+
+#description:  public start method for a unit of work
+#usage: echo $GRAM | workStart
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workStart()
+
+#description:  public stop method for a unit of work
+#usage: echo $GRAM | workStop
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workStop()
+
+#description:  tests the start trigger condition 
+#usage:  echo "$GRAM" | workIsStartTriggered
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workIsStartTriggered()
+
+#description:  tests the stop trigger condition and runs the stop if true
+#usage:  echo "$GRAM" | workIsStopTriggered
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workIsStopTriggered()
+
+#description:  runs the polling strategy
+#usage:  echo "$GRAM" | workPoll
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workPoll()
+
+#description:  does a polling watch for conditions on a job.  the gram must be stored in a file
+#usage:  workWatch gramFileName intervalSeconds (optional.  default 60)
+/home/pentoo/me/FluentBash/core/../unitOfWork/uow.sh  ===>  workWatch()
+
+#description:  writes a log entry for a session
+#usage: echo $data | logShim name 
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  logShim()
+
+#description:  dumps the log
+#usage: getShimLog name 
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  getShimLog()
+
+#description:  starts a Shim.  
+#usage:  startShim name commandToRun 
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  startShim()
+
+#description: sends commands to the Shim but doesn't try to read the response  
+#usage:  echo 'adafadsf' | callShimWithoutRead name 
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  callShimWithoutRead()
+
+#description: sends commands to the Shim.  
+#usage:  echo 'adafadsf' | callShim name isCompleteTest testArg1 testArg2..
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  callShim()
+
+#description:  stops a mediated process
+#usage:  stopShim name
+/home/pentoo/me/FluentBash/core/../processShim/processShim.sh  ===>  stopShim()
+
+#description: echoes pipe to stdout if stdin contains $1
+#usage:  echo abc | ifContains b | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifContains()
+
+#description: echoes pipe to stdout if stdin does not contain $1
+#usage:  echo abc | ifNotContains d | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNotContains()
+
+#description: echoes pipe to stdout if stdin contains each arg
+#usage:  echo abc | ifContainsAll b a c | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifContainsAll()
+
+#description: echoes pipe to stdout if stdin does not contain each arg
+#usage:  echo abc | ifContainsNone d e | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifContainsNone()
+
+#description: echoes pipe to stdout if stdin equals $1
+#usage:  echo abc | ifEquals abc | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifEquals()
+
+#description: echoes pipe to stdout if stdin not equals $1
+#usage:  echo abc | ifNotEquals dafd | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNotEquals()
+
+#description: echoes pipe to stdout if stdin length equals $1
+#usage:  echo abc | ifLengthOf 3 | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifLengthOf()
+
+#description: echoes stdin if stdin starts with $1
+#usage:  echo abc | ifStartsWith ab | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifStartsWith()
+
+#description: echoes stdin if stdin does not start with $1
+#usage:  echo abc | ifNotStartsWith cd | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNotStartsWith()
+
+#description: echoes stdin if stdin ends with $1
+#usage:  echo abc | ifEndsWith abc | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifEndsWith()
+
+#description: echoes stdin if stdin does not start with $1
+#usage:  echo abc | ifNotStartsWith cd | ...will echo abc
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNotEndsWith()
+
+#description: echoes stdin if args are equal
+#usage:  echo blah | command | ifArgsEqual a a | keep on going with output of command
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifArgsEqual()
+
+#description:  echoes stdin if stdin has $1 lines
+#usage:  echo $LINES | ifNumberOfLinesEquals 5 | getLine 5 
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNumberOfLinesEquals()
+
+#description: echoes stdin if stdin has more than $1 lines
+#usage:  echo $LINES | ifNumberOfLinesGreaterThan 5 | getLine 5 
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNumberOfLinesGreaterThan()
+
+#description: echoes stdin if stdin has less than $1 lines
+#usage:  echo $LINES | ifNumberOfLinesLessThan 5 | appendLine newLine 
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  ifNumberOfLinesLessThan()
+
+#description:  runs data thru a list of filter functions (provided by a variable) and echoes it back out if it passes all of them.
+#usage:  echo $data | filter filterVarName
+/home/pentoo/me/FluentBash/core/../piping/conditionals.sh  ===>  filter()
+
+#description:  returns standard in
+#usage:  STDIN=$(getStdIn)
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  getStdIn()
+
+#description:  returns whether the 1st argument is a function (either user-defined or builtin)
+#usage: isFunction myfunc
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  isFunction() 
+
+#description:  returns whether the 1st arg is a user defined function
+#usage: isUserDefinedFunction myfunc
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  isUserDefinedFunction() 
+
+#description: sets a variable from stdin
+#usage: echo data | setVar myVar
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  setVar()
+
+#description: helper function to dynamically execute some stuff 
+#usage: echo $somedata | makeCall myCmd arg1 arg2
+#usage: echo $somedata | "makeCall myCmd arg1 arg2 | nextCmd argA argB"
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  makeCall()
+
+#description:  sends stdin to the function passed in the args, and then echoes stdin back again, so we can have a fluent kind of flow
+#usage: echo "$data" | doFlowThruCall myFunc arg1 arg2 arg3 | doSomethingElseWithOriginalData  
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  doFlowThruCall()
+
+#description: sends stdin to the function passed in the args, and then echoes stdin.  just like doFlowThruCall but with the call being done in the background
+#usage: echo "$data" | doBackgroundFlowThruCall myFunc arg1 arg2 arg3 | doSomethingElseWithOriginalData  
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  doBackgroundFlowThruCall()
+
+#description.  converts a standard function call into a piped function call.  useful for converting "functions that accept stdin" into functions with arguments
+#usage: pipeFirstArgToRemainder stdIn functionCall args
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  pipeFirstArgToRemainder()
+
+#description: takes stdin and uses it as the last argument in the provided command
+#usage:  echo $arg3 | stdInAsLastArg myCmd arg1 arg2
+/home/pentoo/me/FluentBash/core/../piping/piping.sh  ===>  stdInAsLastArg()
+
+#description:  performs a find/replace on whatever was piped in
+#usage:  echo $string | replace stringToFind stringToReplaceWith
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  replace()
+
+#description: returns length of whatever was piped in
+#usage:  echo $string | getLength
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getLength()
+
+#description:  returns substring
+#usage:  echo abc | getSubString startPos length
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getSubstring()
+
+#description:  gets index of substring
+#usage: echo abcdef | getIndexOf cd
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getIndexOf()
+
+#description:  gets portion of string before provided argument
+#usage: echo abcdef | getBefore cd
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getBefore()
+
+#description:  gets portion of string after provided argument
+#usage: echo abcdef | getAfter cd
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getAfter()
+
+#description: gets the number of lines 
+#usage: echo $text | getLineCount
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getLineCount()
+
+#description:  gets the specified line 
+#usage: echo $RESULT | getLine 1
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getLine()
+
+#description:  gets the lines after the provided line number
+#usage: echo $RESULT | getLinesBelow 3
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getLinesBelow()
+
+#description:  gets the lines before the provided line number
+#usage: echo $RESULT | getLinesAbove 3
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  getLinesAbove()
+
+#description:  prepends a string
+#usage:  echo something | prepend prefix
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  prepend()
+
+#description:  appends a string
+#usage:  echo something | append suffix
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  append()
+
+#description:  prepends a line 
+#usage:  echo something | prependLine topline
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  prependLine()
+
+#description: appends a line
+#usage:  echo something | appendLine bottomline
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  appendLine()
+
+#description:  replaces a line by line number
+#usage:  echo something | replaceLine 4 newline
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  replaceLine()
+
+#description:  inserts a line at a given line number
+#usage:  echo something | insertLine 2 newline
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  insertLine()
+
+#description:  removes a line by line number
+#usage: echo something | removeLine 2
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  removeLine()
+
+#description:  prepends a specific line specified by line number
+#usage:  echo something | prependOnLine 1 prefix
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  prependOnLine()
+
+#description:  appends a specific line specified by line number
+#usage:  echo something | appendOnLine 1 suffix
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  appendOnLine()
+
+#description:  does a cat on the filename piped in. 
+#usage: echo fileName | dump
+/home/pentoo/me/FluentBash/core/../piping/strings.sh  ===>  dump()
+
+#description: retrieves an item from array by index.  where array is created by splitting stdin with supplied delimiter
+#usage: echo a b c | getArrayItem 0 #to get first, space delimiter
+#usage:							getArrayItem -1 #to get last, space delimiter
+#usage:							getArrayItem 0 ":" #to get first, : delimiter
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  getArrayItem()
+
+#description:  parses the stdin into lines given a delimiter (or space as a default)
+#usage:  echo "a:b c:d e f" | getArrayItemsAsLines :
+#usage:  echo "a b c" | getArrayItemsAsLines 
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  getArrayItemsAsLines()
+
+#description:  parses stdin to array and returns the first item
+#usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
+#usage:				 getFirstArrayItem :	#to get next, : delimiter
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  getFirstArrayItem()
+
+#description:  parses stdin to array and returns everything after the first item
+#usage: echo a b c | getFirstArrayItem 		#to get next, space delimiter
+#usage:				 getFirstArrayItem :	#to get next, : delimiter
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  getFirstArrayItemRemainder()
+
+#description:  splits stdin into an array (using $1 as the delim) and then performs a function ($2+) on each item (piped into the function)
+#usage:  echo "a:b c:d e f" | doEach : echo 
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  doEach()
+
+#description:  reads stdin as lines and then performs a function ($2+) on each item (piped into the function)
+#usage:  echo $manylines | doEachLine echo 
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  doEachLine()
+
+#description: appends stdin to the provided file arg.  useful during piped list iteration
+#usage:  echo someList | doEach , appendToFile fileName
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  appendToFile()
+
+#description: joins two lists together of the same length, side by side
+#usage:  echo mylist | sideJoinLists myotherlistVarName joinString 
+/home/pentoo/me/FluentBash/core/../piping/lists.sh  ===>  sideJoinLists()
+
+#description:  returns the datagram of an associative array
+#usage:  getKeyValueGram hashName
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  getKeyValueGram()
+
+#description:  dumps a keyvalue gram into an array
+#usage:  declare -A HASH ; readKeyValueGram HASH <<< "$GRAM".  does not work with piped input
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  readKeyValueGram()
+
+#description:  dumps the contents of an associative array
+#usage:  dumpHash varName
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  dumpHash()
+
+#description:  sets an entry in the gram
+#usage: echo $GRAM | kvgSet key value
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  kvgSet()
+
+#description:  gets an entry in the gram
+#usage: echo $GRAM | kvgGet key
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  kvgGet()
+
+#description:  gets all keys, each as separate lines
+#usage: echo $GRAM | kvgGetAllKeys 
+/home/pentoo/me/FluentBash/core/../keyValue/keyValueGram.sh  ===>  kvgGetAllKeys()
+
+#description: initializes a js sandbox repl
+#usage: initREPL myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  initREPL()
+
+#description: initializes a js sandbox repl that returns length-encoded messages
+#usage: initLEREPL myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  initLEREPL()
+
+#description: determines whether the provided instance name is a length-encoded instance
+#usage: isLEREPL myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  isLEREPL()
+
+#description: disposes js sandbox repl
+#usage: disposeREPL myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  disposeREPL()
+
+#description: calls the repl
+#usage: echo $cmd | callREPL myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  callREPL()
+
+#description: gets the repl command history (requests and responses)
+#usage: getREPLHistory myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  getREPLHistory()
+
+#description:  tells the REPL to shutdown
+#usage: exitCall myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  exitCall()
+
+#description:  invokes the echo function of the REPL (useful for implementing an "acknowledged handshake" messaging protocol)
+#usage: echo $cmd | echoCall myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  echoCall()
+
+#description:  makes a silent call to the REPL (ie. telling it not to respond), and does not listen for a response
+#usage: echo $cmd | silentCall myInstance
+/home/pentoo/me/FluentBash/core/../jsSandbox/jsWrapper.sh  ===>  silentCall()
+
+#description:  starts a netcat server which delegates its processing to a handler function
+#usage:  startNCServer 	port quitCmd handlerFn arg arg arg
+/home/pentoo/me/FluentBash/core/../sockets/socketServer.sh  ===>  #defaults:				8080 quit
+
+#description:  sends a line to a nc server
+#usage:  sendNCClient addr port line
+/home/pentoo/me/FluentBash/core/../sockets/socketServer.sh  ===>  sendNCClient()
+
