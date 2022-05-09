@@ -73,8 +73,8 @@ See the various Test scripts for example usage.
 
 -------------
 
-To reference FluentBash add the following lines to the top of your script.  This assumes your script is running in the same root 
-directory as FluentBash.
+To reference FluentBash add the following lines to the top of your script.  This assumes your 
+script is running in the same root directory as FluentBash.
 
 Load loader first
 
@@ -126,10 +126,12 @@ LISTS
 
 	[ "$(echo "a,b,c" | getArrayItem 0 ,)" == "a" ]
 
-	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp | touch derp; cat derp  | getLine 1 ;
+	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , appendToFile derp 
+	| touch derp; cat derp  | getLine 1 ;
 	rm derp )" == "A dog" ]
 
-	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp | touch derp; cat derp  
+	[ "$(echo "A dog,A cat,B cat,C cat" | doEach , ifContains A | appendToFile derp 
+	| touch derp; cat derp  
 	| getLine 2 ; rm derp )" == "A cat" ]
 
 CONDITIONALS
@@ -196,7 +198,8 @@ TRIGGERS
 	#	the trigger itself is polled.  each step is persisted as a file in a "unitOfWork" datagram
 	which encapsulates its logic
 	#		so that it can be exported across machine boundary.
-	#	triggers can be chained together.  thus a chain of reactive logic can be created somewhat fluently.
+	#	triggers can be chained together.  thus a chain of reactive logic can be 
+	created somewhat fluently.
 	touch testFile
 
 	#step 1
@@ -239,9 +242,12 @@ SIGNATURE VALIDATION
 	#arg 1 must be less than 10
 	#arg 2 must be greater than 10
 	#arg 3 must be less than 20 and greater than or equal to 15
-	SIG=$(createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 | addParameter arg3 3 false 0)
-	SIG=$(echo "$SIG" | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric | addParamValidator arg3 isNumeric)
-	SIG=$(echo "$SIG" | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 | addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15)
+	SIG=$(createSig addThreeNumbers | addParameter arg1 1 false 0 | addParameter arg2 2 false 0 
+	| addParameter arg3 3 false 0)
+	SIG=$(echo "$SIG" | addParamValidator arg1 isNumeric | addParamValidator arg2 isNumeric 
+	| addParamValidator arg3 isNumeric)
+	SIG=$(echo "$SIG" | addParamValidator arg1 isLessThan 10 | addParamValidator arg2 isGreaterThan 10 
+	| addParamValidator arg3 isLessThan 20 | addParamValidator arg3 isGreaterThanOrEqual 15)
 
 	#passes validation
 	validateSig addThreeNumbers 1 11 15
