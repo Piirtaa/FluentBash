@@ -56,9 +56,19 @@ Features:
 	A process-shim framework for intercepting stdin/stdout of a process so that it can be more easily managed.
 	For example, this allows javascript engines to be REPL-ized such that they can be talked to via shell commands.
 	
-	A javascript sandbox for executing standalone js.  A javascript REPL.
+	A javascript sandbox for executing standalone js.  
+		
+		Eg. jsRun.sh '()=>{return 1;}'
+		Eg. echo '()=>{return 1;}' | jsRun.sh piped
 	
-
+	A javascript REPL.
+		
+		Eg. jsREPL.sh start myREPL
+		    echo "var a=1;" | jsREPL.sh run myREPL 	
+		    echo "a++;" | jsREPL.sh run myREPL
+		    jsREPL.sh getHistory myREPL
+		    jsREPL.sh stop myREPL
+		    
 See the various Test scripts for example usage.
 
 -------------
