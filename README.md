@@ -1,5 +1,5 @@
 # FluentBash
-bash scripting done fluently.  a js REPL and runner for those things that bash is slow at.  
+bash scripting done fluently, with a js REPL and runner for those things that bash is a bad fit for.  
 
 Features:
 
