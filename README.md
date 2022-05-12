@@ -99,7 +99,7 @@ To load up a specific library/functionality add a "loadScript" call.  eg.
 	loadScript caching/keyValueStore.sh
 
 -------------
-Brief xxamples of some of the functionality expressed as bash tests.
+Brief examples of some of the functionality expressed as bash tests.
 
 
 STRINGS  
